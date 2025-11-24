@@ -1,26 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { CreatePurchaseDto } from './dto/create-purchase.dto';
-import { UpdatePurchaseDto } from './dto/update-purchase.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Purchase } from './schemas/purchase.schema';
 
 @Injectable()
 export class PurchasesService {
-  create(createPurchaseDto: CreatePurchaseDto) {
-    return 'This action adds a new purchase';
+  constructor(@InjectModel(Purchase.name) private model: Model<Purchase>) {}
+
+  async findAll() {
+    return this.model.find().exec();
   }
 
-  findAll() {
-    return `This action returns all purchases`;
+  async findOne(id: string) {
+    return this.model.findById(id).exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} purchase`;
+  async create(data: Partial<Purchase>) {
+    return this.model.create(data);
   }
 
-  update(id: number, updatePurchaseDto: UpdatePurchaseDto) {
-    return `This action updates a #${id} purchase`;
+  async update(id: string, data: Partial<Purchase>) {
+    return this.model.findByIdAndUpdate(id, data, { new: true }).exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} purchase`;
+  async remove(id: string) {
+    return this.model.findByIdAndDelete(id).exec();
   }
 }
