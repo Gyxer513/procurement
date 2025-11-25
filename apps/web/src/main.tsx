@@ -1,23 +1,22 @@
-import { StrictMode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import * as ReactDOM from 'react-dom/client';
-import App from './app/app';
-import 'antd/dist/reset.css';
-import { ConfigProvider, App as AntApp } from 'antd';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { App } from './app/App';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ConfigProvider } from 'antd';
 import ruRU from 'antd/locale/ru_RU';
+import 'antd/dist/reset.css';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ru';
+dayjs.locale('ru');
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const queryClient = new QueryClient();
 
-root.render(
-  <StrictMode>
-    <BrowserRouter>
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
       <ConfigProvider locale={ruRU}>
-        <AntApp>
-          <App />
-        </AntApp>
+        <App />
       </ConfigProvider>
-    </BrowserRouter>
-  </StrictMode>
+    </QueryClientProvider>
+  </React.StrictMode>
 );

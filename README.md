@@ -1,4 +1,7 @@
 # Монорепозиторий Nx + pnpm (api + web)
+____
+
+
 ### Интегрированный Nx-монорепозиторий с pnpm:
 ```text
 backend: NestJS (apps/api)
@@ -146,6 +149,8 @@ Module not found (пакет не найден)
 Несовпадение Node
 Выравнивай через .nvmrc или Volta
 Скрипты-алиасы (рекомендуется добавить в package.json)
+
+```text
 "serve:api": "nx serve api"
 "serve:web": "nx dev web"
 "serve:all": "nx run-many -t serve -p api,web --parallel"
@@ -156,6 +161,8 @@ Module not found (пакет не найден)
 "affected:test": "nx affected -t test"
 "graph": "nx graph"
 "reset": "nx reset"
+```
+
 Примеры установок
 Nest + MongoDB:
 pnpm add -w @nestjs/mongoose mongoose
