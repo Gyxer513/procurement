@@ -31,4 +31,5 @@ export class Purchase extends Document {
   @Prop() comment: string; // Примечания
 }
 
+export type PurchaseDocument = Purchase & Document;
 export const PurchaseSchema = SchemaFactory.createForClass(Purchase);

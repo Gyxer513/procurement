@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { purchasesApi } from '../../shared/api/purchases';
 import dayjs from 'dayjs';
 import { Purchase } from '../../shared/types/Purchase';
+import { CreatePurchaseModal } from '../../features/purchases/CreatePurchaseModal';
+import { useQueryClient } from '@tanstack/react-query';
 
 const { Text } = Typography;
 
@@ -36,7 +38,8 @@ export function PurchaseTable() {
     completed: '',
     responsible: '',
   });
-
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const queryClient = useQueryClient();
   const [search, setSearch] = React.useState(query.q || '');
   const [status, setStatus] = React.useState<string>(query.completed === '' ? '' : String(query.completed));
   const [responsible, setResponsible] = React.useState<string>(query.responsible || '');
@@ -181,6 +184,9 @@ export function PurchaseTable() {
         <Button type="primary" onClick={applyFilters}>Применить</Button>
         <Button onClick={resetFilters}>Сбросить</Button>
         <Button onClick={handleExport}>Экспорт</Button>
+        <Button type="primary" onClick={() => setCreateOpen(true)}>
+          Создать
+        </Button>
       </Space>
 
       <Table<Purchase>
@@ -199,6 +205,10 @@ export function PurchaseTable() {
         onChange={onTableChange}
         sticky
         scroll={{ x: 2700, y: 600 }}
+      />
+      <CreatePurchaseModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
       />
       <Text type="secondary">Подсказка: клик по заголовку сортирует по столбцу.</Text>
     </Space>
