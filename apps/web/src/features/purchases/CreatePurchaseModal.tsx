@@ -10,7 +10,6 @@ type Props = {
 };
 
 function toIso(d?: any) {
-// AntD v5 использует dayjs — у него есть toISOString
   return d && typeof d.toISOString === 'function' ? d.toISOString() : undefined;
 }
 
