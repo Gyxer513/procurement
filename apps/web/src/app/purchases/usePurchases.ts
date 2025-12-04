@@ -48,7 +48,7 @@ export function usePurchases() {
         },
         signal
       ),
-    placeholderData: keepPreviousData, // вместо keepPreviousData: true
+    placeholderData: keepPreviousData,
   });
 
   const applyFilters = () => {
@@ -76,7 +76,7 @@ export function usePurchases() {
 
   const handleExport = async () => {
     try {
-      const res = await purchasesApi.export({
+      const res: any = await purchasesApi.export({
         q: query.q,
         completed:
           typeof query.completed === 'boolean' ? query.completed : undefined,

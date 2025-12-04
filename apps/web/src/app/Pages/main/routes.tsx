@@ -2,6 +2,7 @@ import { PurchaseTable } from '../../purchases/PurchaseTable';
 import { MainPage } from './main';
 import PurchaseViewPage from '../purchases/PurchaseViewPage';
 import { createBrowserRouter } from 'react-router-dom';
+import AdminPage from '../admin/admin';
 
 export const routes = [
   {
@@ -15,6 +16,10 @@ export const routes = [
       {
         path: '/purchases/:id',
         element: <PurchaseViewPage />,
+      },
+      {
+        path: '/admin',
+        element: <AdminPage />,
       },
     ],
   },

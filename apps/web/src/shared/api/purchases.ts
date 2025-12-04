@@ -1,14 +1,12 @@
 import { checkResponse } from '../utils/checkResponse';
 import { BASE_URL } from '../utils/Constants';
 import {
+  BatchResponse,
   Paginated,
   Purchase,
   PurchaseCreateDto,
   PurchaseListParams,
   PurchaseUpdateDto,
-  // Если есть enum-ы на фронте — импортируйте их тоже
-  // PurchaseStatus,
-  // PurchaseSite,
 } from '../types/Purchase';
 
 function appendParam(url: URL, key: string, val: unknown) {
@@ -137,6 +135,116 @@ export class PurchasesApi {
       match?.[1] || match?.[2] || 'Purchases.xlsx'
     );
     return { blob, filename };
+  }
+
+  private async postBatchOnce(
+    body: {
+      items: Partial<Purchase>[];
+      mode: 'insert' | 'upsert';
+      matchBy?: string;
+    },
+    signal?: AbortSignal
+  ) {
+    const url = new URL(`${this.baseUrl.href}batch`);
+    const res = await fetch(url.href, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    });
+    return checkResponse<BatchResponse>(res);
+  }
+
+  // Основной метод: отправка большого массива, разбиение на чанки, суммирование результатов
+  async batch(
+    items: Partial<Purchase>[],
+    opts?: {
+      mode?: 'insert' | 'upsert';
+      matchBy?: string; // для upsert, например 'entryNumber'
+      chunkSize?: number; // дефолт 1000
+      signal?: AbortSignal;
+      onChunk?: (info: {
+        chunkIndex: number;
+        chunkSize: number;
+        totalChunks: number;
+        result: BatchResponse;
+        totals: BatchResponse;
+      }) => void;
+    }
+  ) {
+    const mode = opts?.mode ?? 'upsert';
+    const matchBy = opts?.matchBy ?? 'entryNumber';
+    let chunkSize = Math.max(1, opts?.chunkSize ?? 1000);
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return mode === 'insert'
+        ? ({ inserted: 0 } as BatchResponse)
+        : ({ upserted: 0, modified: 0, matched: 0 } as BatchResponse);
+    }
+
+    const totals: BatchResponse = {
+      inserted: 0,
+      upserted: 0,
+      modified: 0,
+      matched: 0,
+    };
+    const totalChunks = Math.ceil(items.length / chunkSize);
+
+    let i = 0;
+    let chunkIndex = 0;
+    while (i < items.length) {
+      const end = Math.min(i + chunkSize, items.length);
+      const slice = items.slice(i, end);
+
+      try {
+        const res = await this.postBatchOnce(
+          { items: slice, mode, matchBy },
+          opts?.signal
+        );
+
+        // Суммируем результаты
+        if (typeof res.inserted === 'number')
+          totals.inserted = (totals.inserted || 0) + res.inserted;
+        if (typeof res.upserted === 'number')
+          totals.upserted = (totals.upserted || 0) + res.upserted;
+        if (typeof res.modified === 'number')
+          totals.modified = (totals.modified || 0) + res.modified;
+        if (typeof res.matched === 'number')
+          totals.matched = (totals.matched || 0) + res.matched;
+
+        opts?.onChunk?.({
+          chunkIndex,
+          chunkSize: slice.length,
+          totalChunks,
+          result: res,
+          totals,
+        });
+
+        // Переходим к следующему чанку
+        i = end;
+        chunkIndex += 1;
+      } catch (err: any) {
+        // Если получили 413, уменьшаем размер чанка и пробуем снова с того же места
+        const status = err?.status || err?.response?.status;
+        if (status === 413 && chunkSize > 50) {
+          chunkSize = Math.max(50, Math.floor(chunkSize / 2));
+          // Пересчитать totalChunks только для колбэка не обязательно, опционально можно не менять
+          continue;
+        }
+        throw err;
+      }
+    }
+
+    // Возвращаем агрегированный результат, совместимый по ключам с бэком
+    if (mode === 'insert') {
+      return { inserted: totals.inserted || 0 } as BatchResponse;
+    }
+    return {
+      upserted: totals.upserted || 0,
+      modified: totals.modified || 0,
+      matched: totals.matched || 0,
+    } as BatchResponse;
   }
 }
 

@@ -9,6 +9,7 @@ import {
   Query,
   Res,
   HttpCode,
+  BadRequestException,
 } from '@nestjs/common';
 import { PurchasesService } from './purchases.service';
 import { Purchase } from './schemas/purchase.schema';
@@ -16,6 +17,13 @@ import { ListPurchasesDto } from './dto/list-purchases.dto';
 import type { Response } from 'express';
 import { SetStatusDto } from './dto/set-status.dto';
 import { PurchaseLean } from './schemas/purchaseVirtuals.types';
+
+type BatchResult = {
+  inserted?: number;
+  upserted?: number;
+  modified?: number;
+  matched?: number;
+};
 
 @Controller('purchases')
 export class PurchasesController {
@@ -75,5 +83,29 @@ export class PurchasesController {
   async remove(@Param('id') id: string) {
     await this.service.remove(id);
     return { deleted: true };
+  }
+
+  // batch: принимает JSON с Excel, распарсенный на фронте
+  @Post('batch')
+  @HttpCode(200)
+  async batch(
+    @Body()
+    body: {
+      items: Partial<Purchase>[];
+      mode?: 'insert' | 'upsert';
+      matchBy?: keyof Purchase; // для upsert, по умолчанию 'entryNumber'
+    }
+  ): Promise<BatchResult> {
+    if (!body || !Array.isArray(body.items) || body.items.length === 0) {
+      throw new BadRequestException('Body.items must be a non-empty array');
+    }
+    const mode = body.mode ?? 'upsert';
+    if (mode === 'insert') {
+      return this.service.batchInsert(body.items);
+    }
+    return this.service.batchUpsert(body.items, {
+      matchBy: (body.matchBy as any) ?? 'entryNumber',
+      writeStatusHistoryOnInsert: true,
+    });
   }
 }

@@ -57,5 +57,12 @@ export type PurchaseListParams = {
   bankGuaranteeToTo?: string
 };
 
+export type BatchResponse = {
+  inserted?: number;
+  upserted?: number;
+  modified?: number;
+  matched?: number;
+};
+
 export type PurchaseCreateDto = Omit<Purchase, '_id' | 'createdAt' | 'updatedAt'>;
 export type PurchaseUpdateDto = Partial<PurchaseCreateDto>;
