@@ -9,30 +9,25 @@ type QueryState = {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   q?: string;
-  completed?: '' | boolean;
+  completed?: boolean;
   responsible?: string;
 };
 
 export function usePurchases() {
+  // Основной query — то, что реально уходит в API
   const [query, setQuery] = useState<QueryState>({
     page: 1,
     pageSize: 20,
     sortBy: 'createdAt',
     sortOrder: 'desc',
-    q: '',
-    completed: '',
-    responsible: '',
   });
 
-  const [search, setSearch] = useState(query.q || '');
-  const [status, setStatus] = useState<string>(
-    query.completed === '' ? '' : String(query.completed)
-  );
-  const [responsible, setResponsible] = useState<string>(
-    query.responsible || ''
-  );
+  // Локальные состояния для полей фильтров (строки из инпутов/селектов)
+  const [search, setSearch] = useState('');
+  const [completed, setCompleted] = useState(''); // '', 'true', 'false'
+  const [responsible, setResponsible] = useState('');
 
-  const { data, isFetching, isPending } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: ['Purchases', query],
     queryFn: ({ signal }) =>
       purchasesApi.list(
@@ -42,46 +37,57 @@ export function usePurchases() {
           sortBy: query.sortBy,
           sortOrder: query.sortOrder,
           q: query.q,
-          completed:
-            query.completed === '' ? undefined : (query.completed as boolean),
-          responsible: query.responsible || undefined,
+          completed: query.completed,
+          responsible: query.responsible,
         },
         signal
       ),
     placeholderData: keepPreviousData,
   });
 
+  // Применить фильтры (строки -> типы)
   const applyFilters = () => {
+    const completedBool =
+      completed === ''
+        ? undefined
+        : completed === 'true'
+        ? true
+        : completed === 'false'
+        ? false
+        : undefined;
+
     setQuery((q) => ({
       ...q,
       page: 1,
       q: search.trim() || undefined,
-      completed: status === '' ? '' : status === 'true',
+      completed: completedBool,
       responsible: responsible?.trim() || undefined,
     }));
   };
 
+  // Сбросить фильтры
   const resetFilters = () => {
     setSearch('');
-    setStatus('');
+    setCompleted('');
     setResponsible('');
     setQuery((q) => ({
       ...q,
       page: 1,
       q: undefined,
-      completed: '',
+      completed: undefined,
       responsible: undefined,
     }));
   };
 
+  // Экспорт
   const handleExport = async () => {
     try {
       const res: any = await purchasesApi.export({
         q: query.q,
-        completed:
-          typeof query.completed === 'boolean' ? query.completed : undefined,
+        completed: query.completed,
         responsible: query.responsible,
       });
+
       const url = URL.createObjectURL(res.blob);
       const a = document.createElement('a');
       a.href = url;
@@ -91,6 +97,7 @@ export function usePurchases() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (e: any) {
+      console.error(e);
       message.error(e?.message || 'Не удалось выполнить экспорт');
     }
   };
@@ -102,8 +109,8 @@ export function usePurchases() {
     isLoading: isFetching,
     search,
     setSearch,
-    status,
-    setStatus,
+    completed,
+    setCompleted,
     responsible,
     setResponsible,
     applyFilters,

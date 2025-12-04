@@ -24,8 +24,8 @@ export function PurchaseTable() {
     handleExport,
     search,
     setSearch,
-    status,
-    setStatus,
+    completed,
+    setCompleted,
     responsible,
     setResponsible,
   } = usePurchases();
@@ -61,8 +61,8 @@ export function PurchaseTable() {
       <FiltersBar
         search={search}
         setSearch={setSearch}
-        status={status}
-        setStatus={setStatus}
+        completed={completed}
+        setCompleted={setCompleted}
         responsible={responsible}
         setResponsible={setResponsible}
         onApply={applyFilters}
