@@ -3,13 +3,14 @@ import { Flex, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { CreatePurchaseModal } from '../../features/Purchases/CreatePurchaseModal';
 import { EditPurchaseModal } from '../../features/Purchases/EditPurchaseModal';
-import { buildPurchaseColumns, PURCHASE_COLUMN_KEYS } from './purchaseColumns';
+import { buildPurchaseColumns } from './purchaseColumns';
 import { ColumnsVisibility } from './ColumnsVisibility';
 import { FiltersBar } from './FiltersBar';
 import { PurchasesGrid } from './PurchasesGrid';
 import { usePurchases } from './usePurchases';
 import type { Purchase } from '../../shared/types/Purchase';
-
+import { PURCHASE_COLUMN_KEYS } from '../../shared/utils/Constants';
+import { useNavigate } from 'react-router-dom';
 const { Text } = Typography;
 
 export function PurchaseTable() {
@@ -28,7 +29,7 @@ export function PurchaseTable() {
     responsible,
     setResponsible,
   } = usePurchases();
-
+  const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<Purchase | null>(null);
@@ -41,9 +42,9 @@ export function PurchaseTable() {
     setEditOpen(false);
     setEditing(null);
   };
-
+  const openView = (rec: Purchase) => navigate(`/purchases/${rec._id}`);
   const allColumns: ColumnsType<Purchase> = useMemo(
-    () => buildPurchaseColumns(openEdit),
+    () => buildPurchaseColumns(openEdit, openView),
     []
   );
 

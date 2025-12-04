@@ -28,6 +28,13 @@ export type Purchase = {
   comment?: string;
   createdAt?: string;
   updatedAt?: string;
+  status: string
+  site: string
+  bankGuaranteeValidFrom?: string | Date
+  bankGuaranteeValidTo?: string | Date
+  lastStatusChangedAt?: string | Date
+  remainingContractAmount?: number
+  statusHistory?: { status: string; changedAt: string | Date; comment?: string }[]
 };
 
 export type Paginated<T> = { items: T[]; total: number };
@@ -40,6 +47,14 @@ export type PurchaseListParams = {
   q?: string;
   completed?: boolean;
   responsible?: string;
+  status?: string
+  site?: string
+  lastStatusChangedFrom?: string
+  lastStatusChangedTo?: string
+  bankGuaranteeFromFrom?: string
+  bankGuaranteeFromTo?: string
+  bankGuaranteeToFrom?: string
+  bankGuaranteeToTo?: string
 };
 
 export type PurchaseCreateDto = Omit<Purchase, '_id' | 'createdAt' | 'updatedAt'>;

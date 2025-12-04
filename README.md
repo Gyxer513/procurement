@@ -47,7 +47,7 @@ VITE_API_URL=http://localhost:3000
 
 pnpm add -w @nestjs/config
 В AppModule: ConfigModule.forRoot({ isGlobal: true })
-Если без @nestjs/config — достаточно добавить в main.ts:
+Если без @nestjs/config — достаточно добавить в main.tsx:
 
 import 'dotenv/config'
 Быстрый старт (dev)
@@ -169,6 +169,6 @@ pnpm add -w @nestjs/mongoose mongoose
 pnpm add -w @nestjs/config
 Dotenv (если без @nestjs/config):
 pnpm add -w dotenv
-в main.ts: import 'dotenv/config'
+в main.tsx: import 'dotenv/config'
 Типы и инструменты:
 pnpm add -w -D @types/node eslint prettier
