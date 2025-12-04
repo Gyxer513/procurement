@@ -26,7 +26,7 @@ export function EditPurchaseModal({ open, purchase, onClose }: Props) {
     mutationFn: (payload: any) => purchasesApi.update(purchase!._id, payload),
     onSuccess: () => {
       message.success('Изменения сохранены');
-      qc.invalidateQueries({ queryKey: ['purchases'] });
+      qc.invalidateQueries({ queryKey: ['Purchases'] });
       onClose();
     },
     onError: (e: any) => {

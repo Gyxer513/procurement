@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Flex, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { CreatePurchaseModal } from '../../features/purchases/CreatePurchaseModal';
-import { EditPurchaseModal } from '../../features/purchases/EditPurchaseModal';
+import { CreatePurchaseModal } from '../../features/Purchases/CreatePurchaseModal';
+import { EditPurchaseModal } from '../../features/Purchases/EditPurchaseModal';
 import { buildPurchaseColumns, PURCHASE_COLUMN_KEYS } from './purchaseColumns';
 import { ColumnsVisibility } from './ColumnsVisibility';
 import { FiltersBar } from './FiltersBar';

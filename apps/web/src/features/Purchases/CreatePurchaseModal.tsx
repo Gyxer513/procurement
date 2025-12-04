@@ -21,8 +21,8 @@ export function CreatePurchaseModal({ open, onClose }: Props) {
     mutationFn: (payload: any) => purchasesApi.create(payload),
     onSuccess: () => {
       message.success('Закупка создана');
-// Обновить список; достаточно по префиксу 'purchases'
-      qc.invalidateQueries({ queryKey: ['purchases'] });
+// Обновить список; достаточно по префиксу 'Purchases'
+      qc.invalidateQueries({ queryKey: ['Purchases'] });
       onClose();
     },
     onError: (e: any) => {

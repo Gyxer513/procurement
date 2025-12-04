@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, FilterQuery } from 'mongoose';
-import { Purchase, PurchaseDocument } from './schemas/purchase.schema';
+import { FilterQuery, Model } from 'mongoose';
+import { Purchase, PurchaseDocument, PurchaseSite, PurchaseStatus } from './schemas/purchase.schema';
 import { ListPurchasesDto } from './dto/list-purchases.dto';
 import * as ExcelJS from 'exceljs';
 import dayjs from 'dayjs';
+import { PurchaseLean } from './schemas/purchaseVirtuals.types';
 
 @Injectable()
 export class PurchasesService {
@@ -13,13 +14,34 @@ export class PurchasesService {
     private readonly purchaseModel: Model<PurchaseDocument>
   ) {}
 
+  private parseDate(v?: string) {
+    if (!v) return undefined;
+    const d = dayjs(v);
+    return d.isValid() ? d.toDate() : undefined;
+  }
+
+  private addDateRange(
+    filter: FilterQuery<PurchaseDocument>,
+    field: keyof FilterQuery<PurchaseDocument>,
+    from?: string,
+    to?: string
+  ) {
+    const gte = this.parseDate(from);
+    const lte = this.parseDate(to);
+    if (gte || lte) {
+      (filter as any)[field as string] = {
+        ...(gte ? { $gte: gte } : {}),
+        ...(lte ? { $lte: lte } : {}),
+      };
+    }
+  }
+
   private buildFilter(query: ListPurchasesDto): FilterQuery<PurchaseDocument> {
     const filter: FilterQuery<PurchaseDocument> = {};
     const or: FilterQuery<PurchaseDocument>[] = [];
 
     if (query.q) {
       const rx = new RegExp(query.q.trim(), 'i');
-      // поля для поиска: подстрой под твой schema
       or.push(
         { supplierName: rx },
         { contractSubject: rx },
@@ -44,6 +66,21 @@ export class PurchasesService {
       filter.responsible = new RegExp(query.responsible.trim(), 'i');
     }
 
+// Новые фильтры
+    if (query.status) {
+      filter.status = query.status as any as PurchaseStatus;
+    }
+    if (query.site) {
+      filter.site = query.site as any as PurchaseSite;
+    }
+
+// Диапазон по дате последнего изменения статуса
+    this.addDateRange(filter, 'lastStatusChangedAt', query.lastStatusChangedFrom, query.lastStatusChangedTo);
+
+// Диапазоны по сроку действия банковской гарантии
+    this.addDateRange(filter, 'bankGuaranteeValidFrom', query.bankGuaranteeFromFrom, query.bankGuaranteeFromTo);
+    this.addDateRange(filter, 'bankGuaranteeValidTo', query.bankGuaranteeToFrom, query.bankGuaranteeToTo);
+
     return filter;
   }
 
@@ -57,7 +94,7 @@ export class PurchasesService {
     if (query.sortBy) {
       sort[query.sortBy] = query.sortOrder === 'asc' ? 1 : -1;
     } else {
-      sort['createdAt'] = -1; // дефолт
+      sort['createdAt'] = -1;
     }
 
     const [items, total] = await Promise.all([
@@ -66,7 +103,7 @@ export class PurchasesService {
         .sort(sort)
         .skip((page - 1) * pageSize)
         .limit(pageSize)
-        .lean()
+        .lean<PurchaseLean>({ virtuals: true })
         .exec(),
       this.purchaseModel.countDocuments(filter).exec(),
     ]);
@@ -74,24 +111,41 @@ export class PurchasesService {
     return { items, total };
   }
 
-  async findOne(id: string): Promise<Purchase> {
-    const doc = await this.purchaseModel.findById(id).lean().exec();
+  async findOne(id: string): Promise<PurchaseLean> {
+    const doc = await this.purchaseModel.findById(id).lean<PurchaseLean>({ virtuals: true }).exec();
     if (!doc) throw new NotFoundException('Purchase not found');
-    return doc as unknown as Purchase;
+    return doc;
   }
 
-  async create(dto: Partial<Purchase>): Promise<Purchase> {
+  async create(dto: Partial<Purchase>): Promise<PurchaseLean> {
     const doc = await this.purchaseModel.create(dto);
-    return doc.toObject() as unknown as Purchase;
+    return doc.toObject({ virtuals: true }) as PurchaseLean;
   }
 
-  async update(id: string, dto: Partial<Purchase>): Promise<Purchase> {
+  async update(id: string, dto: Partial<Purchase>): Promise<PurchaseLean> {
     const doc = await this.purchaseModel
       .findByIdAndUpdate(id, dto, { new: true })
-      .lean()
+      .lean<PurchaseLean>({ virtuals: true })
       .exec();
     if (!doc) throw new NotFoundException('Purchase not found');
-    return doc as unknown as Purchase;
+    return doc;
+  }
+
+// Смена статуса с комментарием и записью в историю (атомарно)
+  async setStatus(id: string, status: PurchaseStatus, comment?: string): Promise<PurchaseLean> {
+    const now = new Date();
+    const update: any = {
+      $set: { status, lastStatusChangedAt: now },
+      $push: { statusHistory: { status, changedAt: now, ...(comment ? { comment } : {}) } },
+    };
+
+    const doc = await this.purchaseModel
+      .findByIdAndUpdate(id, update, { new: true })
+      .lean<PurchaseLean>({ virtuals: true })
+      .exec();
+
+    if (!doc) throw new NotFoundException('Purchase not found');
+    return doc;
   }
 
   async remove(id: string) {
@@ -100,25 +154,27 @@ export class PurchasesService {
 
   async export(query: ListPurchasesDto) {
     const filter = this.buildFilter(query);
-    // лимит на экспорт, чтобы не положить память (подстрой при необходимости)
     const MAX_EXPORT = 20000;
 
-    const rows = await this.purchaseModel
+    const rows: any = await this.purchaseModel
       .find(filter)
       .sort({ createdAt: -1 })
       .limit(MAX_EXPORT)
-      .lean()
+      .lean<PurchaseLean>({ virtuals: true })
       .exec();
 
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('Закупки');
 
     ws.columns = [
-      { header: 'Вход. №', key: 'entryNumber', width: 20 },
+      { header: 'Вход. №', key: 'entryNumber', width: 16 },
+      { header: 'Статус', key: 'status', width: 18 },
+      { header: 'Дата изм. статуса', key: 'lastStatusChangedAt', width: 18 },
+      { header: 'Площадка', key: 'site', width: 16 },
       { header: 'Предмет договора', key: 'contractSubject', width: 30 },
-      { header: 'Поставщик', key: 'supplierName', width: 30 },
+      { header: 'Поставщик', key: 'supplierName', width: 28 },
       { header: 'СМП', key: 'smp', width: 10 },
-      { header: 'ИНН', key: 'supplierInn', width: 18 },
+      { header: 'ИНН', key: 'supplierInn', width: 16 },
       { header: 'НМЦ', key: 'initialPrice', width: 16 },
       { header: 'Сумма закупки', key: 'purchaseAmount', width: 18 },
       { header: 'Номер договора', key: 'contractNumber', width: 18 },
@@ -129,16 +185,19 @@ export class PurchasesService {
       { header: 'Дата размещения', key: 'placementDate', width: 16 },
       { header: 'Способ закупки', key: 'methodOfPurchase', width: 24 },
       { header: 'Документ (№, дата)', key: 'documentNumber', width: 20 },
-      { header: 'Состоялась', key: 'completed', width: 14 },
-      { header: 'Экономия', key: 'savings', width: 16 },
+      { header: 'Состоялась', key: 'completed', width: 12 },
+      { header: 'Экономия', key: 'savings', width: 14 },
       { header: 'Сумма исполнения', key: 'performanceAmount', width: 18 },
       { header: 'Форма обеспечения', key: 'performanceForm', width: 20 },
-      { header: 'Номер ДС', key: 'additionalAgreementNumber', width: 18 },
+      { header: 'Номер ДС', key: 'additionalAgreementNumber', width: 16 },
       { header: 'Актуальная сумма', key: 'currentContractAmount', width: 18 },
+      { header: 'Остаток по договору', key: 'remainingContractAmount', width: 18 },
+      { header: 'БГ: с', key: 'bankGuaranteeValidFrom', width: 16 },
+      { header: 'БГ: по', key: 'bankGuaranteeValidTo', width: 16 },
       { header: 'Размещение', key: 'publication', width: 20 },
-      { header: 'Ответственный', key: 'responsible', width: 20 },
-      { header: '№ по плану', key: 'planNumber', width: 16 },
-      { header: 'Обеспечение заявки', key: 'applicationAmount', width: 20 },
+      { header: 'Ответственный', key: 'responsible', width: 18 },
+      { header: '№ по плану', key: 'planNumber', width: 14 },
+      { header: 'Обеспечение заявки', key: 'applicationAmount', width: 18 },
       { header: 'Примечания', key: 'comment', width: 30 },
     ] as any;
 
@@ -148,6 +207,9 @@ export class PurchasesService {
     for (const r of rows) {
       ws.addRow({
         entryNumber: r.entryNumber ?? '',
+        status: r.status ?? '',
+        lastStatusChangedAt: fmtDate((r as any).lastStatusChangedAt),
+        site: r.site ?? '',
         contractSubject: r.contractSubject ?? '',
         supplierName: r.supplierName ?? '',
         smp: r.smp ?? '',
@@ -168,6 +230,11 @@ export class PurchasesService {
         performanceForm: r.performanceForm ?? '',
         additionalAgreementNumber: r.additionalAgreementNumber ?? '',
         currentContractAmount: r.currentContractAmount ?? '',
+        remainingContractAmount:
+          r.remainingContractAmount ??
+          Math.max(0, (r.currentContractAmount ?? 0) - (r.performanceAmount ?? 0)),
+        bankGuaranteeValidFrom: fmtDate((r as any).bankGuaranteeValidFrom),
+        bankGuaranteeValidTo: fmtDate((r as any).bankGuaranteeValidTo),
         publication: r.publication ?? '',
         responsible: r.responsible ?? '',
         planNumber: r.planNumber ?? '',
@@ -175,8 +242,6 @@ export class PurchasesService {
         comment: r.comment ?? '',
       });
     }
-
-    // можно добавить форматирование чисел/дат по желанию
 
     const buffer = await wb.xlsx.writeBuffer();
     const filename = `purchases-${dayjs().format('YYYY-MM-DD')}.xlsx`;

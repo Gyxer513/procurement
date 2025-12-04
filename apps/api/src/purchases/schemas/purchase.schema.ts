@@ -1,35 +1,85 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, HydratedDocument } from 'mongoose';
 
-@Schema({ timestamps: true })
-export class Purchase extends Document {
-  @Prop() entryNumber: string; // Вход. №, дата служебной записки
-  @Prop() contractSubject: string; // Предмет договора
-  @Prop() supplierName: string; // Наименование поставщика
-  @Prop() smp: string; // СМП
-  @Prop() supplierInn: string; // ИНН поставщика
-  @Prop() purchaseAmount: number; // Сумма закупки
-  @Prop() contractNumber: string; // Номер договора
-  @Prop() contractDate: Date; // Дата заключения
-  @Prop() validFrom: Date; // Срок действия с
-  @Prop() validTo: Date; // Срок действия по
-  @Prop() contractEnd: Date; // Срок исполнения договора
-  @Prop() initialPrice: number; // Начальная максимальная цена
-  @Prop() placementDate: Date; // Дата размещения процедуры
-  @Prop() methodOfPurchase: string; // Способ закупки
-  @Prop() documentNumber: string; // Номер и дата документа
-  @Prop() completed: boolean; // Процедура закупки состоялась
-  @Prop() savings: number; // Экономия
-  @Prop() performanceAmount: number; // Сумма исполнения договора
-  @Prop() performanceForm: string; // Форма обеспечения исполнения
-  @Prop() additionalAgreementNumber: string; // Номер ДС
-  @Prop() currentContractAmount: number; // Актуальная сумма
-  @Prop() publication: string; // Размещение (наличие подписанных документов)
-  @Prop() responsible: string; // Ответственный исполнитель
-  @Prop() planNumber: string; // Номер по плану закупок
-  @Prop() applicationAmount: number; // Обеспечение заявки, сумма
-  @Prop() comment: string; // Примечания
+export enum PurchaseStatus {
+  InProgress = 'в работе',
+  UnderReview = 'на рассмотрении',
+  ReceivedByProcurement = 'получено отделом закупок',
+  Rework = 'на доработку',
+  Rejected = 'отказано',
+  Canceled = 'аннулировано',
 }
 
-export type PurchaseDocument = Purchase & Document;
+export enum PurchaseSite {
+  Skatertny = 'Скатертный',
+  Lomonosovsky = 'Ломоносовский',
+  Voronovo = 'Вороново',
+}
+
+@Schema({ _id: false })
+export class StatusHistoryEntry {
+  @Prop({ enum: PurchaseStatus, required: true })
+  status: PurchaseStatus;
+
+  @Prop({ type: Date, required: true, default: Date.now })
+  changedAt: Date;
+
+  @Prop()
+  comment?: string;
+}
+export const StatusHistoryEntrySchema = SchemaFactory.createForClass(StatusHistoryEntry);
+
+@Schema({
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+})
+export class Purchase extends Document {
+  @Prop() entryNumber: string;
+  @Prop() contractSubject: string;
+  @Prop() supplierName: string;
+  @Prop() smp: string;
+  @Prop() supplierInn: string;
+  @Prop() purchaseAmount: number;
+  @Prop() contractNumber: string;
+  @Prop() contractDate: Date;
+  @Prop() validFrom: Date;
+  @Prop() validTo: Date;
+  @Prop() contractEnd: Date;
+  @Prop() initialPrice: number;
+  @Prop() placementDate: Date;
+  @Prop() methodOfPurchase: string;
+  @Prop() documentNumber: string;
+  @Prop() completed: boolean;
+  @Prop() savings: number;
+  @Prop() performanceAmount: number;
+  @Prop() performanceForm: string;
+  @Prop() additionalAgreementNumber: string;
+  @Prop() currentContractAmount: number;
+  @Prop() publication: string;
+  @Prop() responsible: string;
+  @Prop() planNumber: string;
+  @Prop() applicationAmount: number;
+  @Prop() comment: string;
+
+// Новые поля из прошлого ответа
+  @Prop({ enum: PurchaseStatus, default: PurchaseStatus.InProgress, index: true })
+  status: PurchaseStatus;
+
+  @Prop() bankGuaranteeValidFrom: Date;
+  @Prop() bankGuaranteeValidTo: Date;
+
+  @Prop({ enum: PurchaseSite, index: true })
+  site: PurchaseSite;
+
+// История изменений статусов
+  @Prop({ type: [StatusHistoryEntrySchema], default: [] })
+  statusHistory: StatusHistoryEntry[];
+
+// Последняя дата изменения статуса (для быстрого доступа/сортировки)
+  @Prop({ type: Date })
+  lastStatusChangedAt?: Date;
+}
+
 export const PurchaseSchema = SchemaFactory.createForClass(Purchase);
+export type PurchaseDocument = HydratedDocument<Purchase>;

@@ -16,7 +16,7 @@ function appendParam(url: URL, key: string, val: unknown) {
 export class PurchasesApi {
   private readonly baseUrl: URL;
 
-  constructor(baseURL: string, slug = 'purchases') {
+  constructor(baseURL: string, slug = 'Purchases') {
     this.baseUrl = new URL(
       slug.replace(/^\/+/, ''),
       baseURL.endsWith('/') ? baseURL : baseURL + '/'
@@ -39,7 +39,7 @@ export class PurchasesApi {
     return checkResponse<Paginated<Purchase>>(res);
   }
 
-  // Поиск (если на бэке есть /purchases/search)
+  // Поиск (если на бэке есть /Purchases/search)
   async search(name: string, signal?: AbortSignal) {
     const url = new URL(`${this.baseUrl.href}search`);
     appendParam(url, 'title', name);
@@ -83,7 +83,7 @@ export class PurchasesApi {
     return checkResponse<{ deleted: boolean }>(res);
   }
 
-  // Экспорт, допустим /purchases/export (excel)
+  // Экспорт, допустим /Purchases/export (excel)
   async export(params: PurchaseListParams = {}) {
     const url = new URL(`${this.baseUrl.href}export`);
     appendParam(url, 'q', params.q);
@@ -92,17 +92,17 @@ export class PurchasesApi {
     appendParam(url, 'responsible', params.responsible);
 
     const res = await fetch(url.href, { credentials: 'include' });
-    if (!res.ok) return checkResponse(res); // пробросим ошибку как JSON/текст
+    if (!res.ok) return checkResponse(res);
 
     const blob = await res.blob();
     // Попробуем имя файла из заголовка
     const cd = res.headers.get('content-disposition') || '';
     const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(cd);
     const filename = decodeURIComponent(
-      match?.[1] || match?.[2] || 'purchases.xlsx'
+      match?.[1] || match?.[2] || 'Purchases.xlsx'
     );
     return { blob, filename };
   }
 }
 
-export const purchasesApi = new PurchasesApi(BASE_URL, 'purchases/');
+export const purchasesApi = new PurchasesApi(BASE_URL, 'Purchases/');

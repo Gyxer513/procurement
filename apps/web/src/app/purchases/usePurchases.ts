@@ -33,7 +33,7 @@ export function usePurchases() {
   );
 
   const { data, isFetching, isPending } = useQuery({
-    queryKey: ['purchases', query],
+    queryKey: ['Purchases', query],
     queryFn: ({ signal }) =>
       purchasesApi.list(
         {
@@ -85,7 +85,7 @@ export function usePurchases() {
       const url = URL.createObjectURL(res.blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = res.filename || 'purchases.xlsx';
+      a.download = res.filename || 'Purchases.xlsx';
       document.body.appendChild(a);
       a.click();
       a.remove();
