@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Form, Input, InputNumber, DatePicker, Switch, Row, Col } from 'antd';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 
 export type PurchaseFormValues = {
   // основные
@@ -72,15 +72,6 @@ export function PurchaseForm({ form, initialValues }: Props) {
         completed: false,
         smp: false,
         ...initialValues,
-        // Если initialValues приходят строками дат — можно раскомментировать и нормализовать:
-        // contractDate: initialValues?.contractDate ? dayjs(initialValues.contractDate) : undefined,
-        // validFrom: initialValues?.validFrom ? dayjs(initialValues.validFrom) : undefined,
-        // validTo: initialValues?.validTo ? dayjs(initialValues.validTo) : undefined,
-        // contractEnd: initialValues?.contractEnd ? dayjs(initialValues.contractEnd) : undefined,
-        // placementDate: initialValues?.placementDate ? dayjs(initialValues.placementDate) : undefined,
-        // bankGuaranteeValidFrom: initialValues?.bankGuaranteeValidFrom ? dayjs(initialValues.bankGuaranteeValidFrom) : undefined,
-        // bankGuaranteeValidTo: initialValues?.bankGuaranteeValidTo ? dayjs(initialValues.bankGuaranteeValidTo) : undefined,
-        // lastStatusChangedAt: initialValues?.lastStatusChangedAt ? dayjs(initialValues.lastStatusChangedAt) : undefined,
       }}
     >
       <Row gutter={16}>
