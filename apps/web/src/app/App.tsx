@@ -1,6 +1,6 @@
 import { Layout } from 'antd';
 import { RouterProvider } from 'react-router-dom';
-import { router } from './Pages/main/routes';
+import { router } from './router/routes';
 
 export function App() {
   return (

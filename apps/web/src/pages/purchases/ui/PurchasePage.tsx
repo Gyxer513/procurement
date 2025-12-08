@@ -1,19 +1,19 @@
 import { useMemo, useState } from 'react';
 import { Flex, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { CreatePurchaseModal } from '../../features/Purchases/CreatePurchaseModal';
-import { EditPurchaseModal } from '../../features/Purchases/EditPurchaseModal';
-import { buildPurchaseColumns } from './purchaseColumns';
-import { ColumnsVisibility } from './ColumnsVisibility';
-import { FiltersBar } from './FiltersBar';
-import { PurchasesGrid } from './PurchasesGrid';
-import { usePurchases } from './usePurchases';
-import type { Purchase } from '../../shared/types/Purchase';
-import { PURCHASE_COLUMN_KEYS } from '../../shared/utils/Constants';
+import { CreatePurchaseModal } from '../../../features/Purchases/create/ui/CreatePurchaseModal';
+import { EditPurchaseModal } from '../../../features/Purchases/edit/ui/EditPurchaseModal';
+import { buildPurchaseColumns } from '../../../entities/purchase/lib/columns';
+import { ColumnsVisibility } from '../../../widgets/columns-visibility/ui/ColumnsVisibility';
+import { FiltersBar } from '../../../widgets/purchase-filters/ui/FiltersBar';
+import { PurchasesGrid } from '../../../widgets/purchases-table/ui/PurchasesGrid';
+import { hooks } from '../../../entities/purchase/model/hooks';
+import type { Purchase } from '../../../shared/types/Purchase';
+import { PURCHASE_COLUMN_KEYS } from '../../../shared/utils/Constants';
 import { useNavigate } from 'react-router-dom';
 const { Text } = Typography;
 
-export function PurchaseTable() {
+export function PurchasePage() {
   const {
     query,
     setQuery,
@@ -24,11 +24,11 @@ export function PurchaseTable() {
     handleExport,
     search,
     setSearch,
-    status,
-    setStatus,
+    completed,
+    setCompleted,
     responsible,
     setResponsible,
-  } = usePurchases();
+  } = hooks();
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -61,8 +61,8 @@ export function PurchaseTable() {
       <FiltersBar
         search={search}
         setSearch={setSearch}
-        status={status}
-        setStatus={setStatus}
+        completed={completed}
+        setCompleted={setCompleted}
         responsible={responsible}
         setResponsible={setResponsible}
         onApply={applyFilters}

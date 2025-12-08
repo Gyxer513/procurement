@@ -18,13 +18,23 @@ export default [
         'error',
         {
           enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          allow: [
+            '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
+            '^@app(/.)?$',
+            '^@pages(/.)?$',
+            '^@widgets(/.)?$',
+            '^@features(/.)?$',
+            '^@entities(/.)?$',
+            '^@shared(/.)?$',
+            '^@(/.)?$',
+          ],
           depConstraints: [
             {
               sourceTag: '*',
               onlyDependOnLibsWithTags: ['*'],
             },
           ],
+          allowImportsFromSameProjectWithAbsolutePaths: true,
         },
       ],
     },
@@ -40,7 +50,5 @@ export default [
       '**/*.cjs',
       '**/*.mjs',
     ],
-    // Override or add rules here
-    rules: {},
   },
 ];

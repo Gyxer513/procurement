@@ -5,7 +5,7 @@ import ruRU from 'antd/locale/ru_RU';
 import 'antd/dist/reset.css';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
-import { App } from './app/app';
+import { App } from '@app/App';
 import { StrictMode } from 'react';
 dayjs.locale('ru');
 

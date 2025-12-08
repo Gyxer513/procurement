@@ -3,8 +3,8 @@ import { Button, Flex, Input, Select } from 'antd';
 type Props = {
   search: string;
   setSearch: (v: string) => void;
-  status: string;
-  setStatus: (v: string) => void;
+  completed: string;
+  setCompleted: (v: string) => void;
   responsible: string;
   setResponsible: (v: string) => void;
   onApply: () => void;
@@ -16,8 +16,8 @@ type Props = {
 export function FiltersBar({
   search,
   setSearch,
-  status,
-  setStatus,
+  completed,
+  setCompleted,
   responsible,
   setResponsible,
   onApply,
@@ -38,8 +38,8 @@ export function FiltersBar({
       <Select
         allowClear
         placeholder="Состоялась"
-        value={status === '' ? undefined : status}
-        onChange={(v) => setStatus(v ?? '')}
+        value={completed === '' ? undefined : completed}
+        onChange={(v) => setCompleted(v ?? '')}
         style={{ width: 160 }}
         options={[
           { label: 'Да', value: 'true' },

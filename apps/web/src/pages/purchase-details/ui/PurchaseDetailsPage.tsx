@@ -13,7 +13,7 @@ import {
 import { fmtDate, rub } from '../../../shared/utils/format';
 import { Purchase } from '../../../shared/types/Purchase';
 import { purchasesApi } from '../../../shared/api/purchases';
-import PurchaseStatusTimeline from './PurchaseStatusTimeline';
+import PurchaseStatusTimeline from '../../../widgets/status-timeline/ui/PurchaseStatusTimeline';
 
 const STATUS_COLORS: Record<string, string> = {
   'в работе': 'blue',
@@ -29,7 +29,7 @@ const SITE_COLORS: Record<string, string> = {
   Вороново: 'green',
 };
 
-export const PurchaseViewPage: React.FC = () => {
+export const PurchaseDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [purchase, setPurchase] = React.useState<Purchase | null>(null);
@@ -291,4 +291,4 @@ export const PurchaseViewPage: React.FC = () => {
   );
 };
 
-export default PurchaseViewPage;
+export default PurchaseDetailsPage;
