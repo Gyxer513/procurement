@@ -1,5 +1,5 @@
 import { checkResponse } from '../utils/checkResponse';
-import { BASE_URL } from '../utils/Constants';
+import { BASE_URL } from './base';
 import {
   BatchResponse,
   Paginated,
