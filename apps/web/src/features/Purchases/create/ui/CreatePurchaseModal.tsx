@@ -1,8 +1,7 @@
-import React from 'react';
 import { Modal, Form, message } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { purchasesApi } from '../../shared/api/purchases';
-import { PurchaseForm, PurchaseFormValues } from './PurchaseForm';
+import { purchasesApi } from '../../../../shared/api/purchases';
+import { PurchaseForm, PurchaseFormValues } from '../../form/ui/PurchaseForm';
 
 type Props = {
   open: boolean;

@@ -1,6 +1,6 @@
 import { Table } from 'antd';
 import type { ColumnsType, TableProps } from 'antd/es/table';
-import type { Purchase } from '../../shared/types/Purchase';
+import type { Purchase } from '../../../shared/types/Purchase';
 
 type Props = {
   loading: boolean;

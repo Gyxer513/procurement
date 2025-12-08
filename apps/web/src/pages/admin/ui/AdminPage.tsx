@@ -1,9 +1,9 @@
-import React, { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { read, utils } from 'xlsx';
 import moment from 'moment';
-import { BASE_URL } from '../../../shared/utils/Constants';
-import { Purchase } from '../../../shared/types/Purchase';
+import { BASE_URL } from '@shared/utils';
+import { Purchase } from '@shared/types/Purchase';
 
 type Mode = 'upsert' | 'insert';
 type BatchResponse = {

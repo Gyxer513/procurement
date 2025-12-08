@@ -1,6 +1,5 @@
-import React from 'react';
 import { Timeline, Tag } from 'antd';
-import { Purchase } from '../../../shared/types/Purchase';
+import { Purchase } from '@/shared/types/Purchase';
 import { fmtDate } from '../../../shared/utils/format';
 
 const STATUS_COLORS: Record<string, string> = {

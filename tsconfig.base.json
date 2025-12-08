@@ -1,6 +1,17 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@app/*": ["apps/web/src/app/*"],
+      "@pages/*": ["apps/web/src/pages/*"],
+      "@widgets/*": ["apps/web/src/widgets/*"],
+      "@features/*": ["apps/web/src/features/*"],
+      "@entities/*": ["apps/web/src/entities/*"],
+      "@shared/*": ["apps/web/src/shared/*"],
+      "@/*": ["apps/web/src/*"]
+    },
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
@@ -13,8 +24,6 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
-    "paths": {}
   },
   "exclude": ["node_modules", "tmp"]
 }

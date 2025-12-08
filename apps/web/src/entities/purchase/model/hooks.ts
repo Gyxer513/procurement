@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { message } from 'antd';
-import { purchasesApi } from '../../shared/api/purchases';
+import { purchasesApi } from '../../../shared/api/purchases';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
 type QueryState = {
@@ -13,7 +13,7 @@ type QueryState = {
   responsible?: string;
 };
 
-export function usePurchases() {
+export function hooks() {
   // Основной query — то, что реально уходит в API
   const [query, setQuery] = useState<QueryState>({
     page: 1,
