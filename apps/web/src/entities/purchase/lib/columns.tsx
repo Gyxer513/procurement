@@ -1,7 +1,7 @@
 import { Button, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import type { Purchase } from '../../../shared/types/Purchase';
-import { fmtDate, rub } from '../../../shared/utils/format';
+import type { Purchase } from '@shared/types/Purchase';
+import { fmtDate, rub } from '@shared/utils/format';
 
 const STATUS_COLORS: Record<string, string> = {
   'в работе': 'blue',

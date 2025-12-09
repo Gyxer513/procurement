@@ -6,7 +6,7 @@ import {
   IsBoolean,
   IsNumber,
 } from 'class-validator';
-import { PurchaseSite, PurchaseStatus } from '../schemas/purchase.schema';
+import { PurchaseSite, PurchaseStatus } from '../../infrastructure/schemas/purchase.schema';
 
 export class ListPurchasesDto {
   @IsOptional()

@@ -14,10 +14,9 @@ import {
 } from 'antd';
 import type { UploadProps, RcFile } from 'antd/es/upload';
 import { InboxOutlined } from '@ant-design/icons';
-
-import { parseExcelToPurchases } from '@entities/purchase/lib/importXlsx';
 import type { Purchase, BatchResponse } from '@shared/types/Purchase';
 import { purchasesApi } from '@shared/api/purchases';
+import { parseExcelToPurchases } from '@entities/purchase/lib/exel/parseExcelToPurchases';
 
 const { Dragger } = Upload;
 const { Text, Paragraph } = Typography;
