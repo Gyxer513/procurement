@@ -6,12 +6,12 @@ import {
   PurchaseDocument,
   PurchaseSite,
   PurchaseStatus,
-} from './schemas/purchase.schema';
-import { ListPurchasesDto } from './dto/list-purchases.dto';
+} from '../../infrastructure/schemas/purchase.schema';
+import { ListPurchasesDto } from '../dto/list-purchases.dto';
 import * as ExcelJS from 'exceljs';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { PurchaseLean } from './schemas/purchaseVirtuals.types';
+import { PurchaseLean } from '../../infrastructure/schemas/purchaseVirtuals.types';
 
 dayjs.extend(customParseFormat);
 

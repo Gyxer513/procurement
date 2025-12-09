@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { PurchaseStatus } from '../schemas/purchase.schema';
+import { PurchaseStatus } from '../../infrastructure/schemas/purchase.schema';
 
 export class SetStatusDto {
   @IsEnum(PurchaseStatus)

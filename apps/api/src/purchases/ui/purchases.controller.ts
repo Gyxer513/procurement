@@ -11,12 +11,12 @@ import {
   HttpCode,
   BadRequestException,
 } from '@nestjs/common';
-import { PurchasesService } from './purchases.service';
-import { Purchase } from './schemas/purchase.schema';
-import { ListPurchasesDto } from './dto/list-purchases.dto';
+import { PurchasesService } from '../application/services/purchases.service';
+import { Purchase } from '../infrastructure/schemas/purchase.schema';
+import { ListPurchasesDto } from '../application/dto/list-purchases.dto';
 import type { Response } from 'express';
-import { SetStatusDto } from './dto/set-status.dto';
-import { PurchaseLean } from './schemas/purchaseVirtuals.types';
+import { SetStatusDto } from '../application/dto/set-status.dto';
+import { PurchaseLean } from '../infrastructure/schemas/purchaseVirtuals.types';
 
 type BatchResult = {
   inserted?: number;
