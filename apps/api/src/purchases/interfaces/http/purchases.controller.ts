@@ -11,12 +11,11 @@ import {
   HttpCode,
   BadRequestException,
 } from '@nestjs/common';
-import { PurchasesService } from '../application/services/purchases.service';
-import { Purchase } from '../infrastructure/schemas/purchase.schema';
-import { ListPurchasesDto } from '../application/dto/list-purchases.dto';
-import type { Response } from 'express';
-import { SetStatusDto } from '../application/dto/set-status.dto';
-import { PurchaseLean } from '../infrastructure/schemas/purchaseVirtuals.types';
+import { Response } from 'express';
+import { PurchasesService } from '../../application/services/purchases.service';
+import { Purchase } from '../../domain/entities/purchase.entity';
+import { ListPurchasesDto } from '../../application/dto/list-purchases.dto';
+import { SetStatusDto } from '../../application/dto/set-status.dto';
 
 type BatchResult = {
   inserted?: number;
@@ -29,63 +28,68 @@ type BatchResult = {
 export class PurchasesController {
   constructor(private readonly service: PurchasesService) {}
 
-  // список с пагинацией/поиском/сортировкой
+  // Список с пагинацией/поиском/сортировкой
   @Get()
   async list(@Query() query: ListPurchasesDto) {
     return this.service.list(query);
   }
 
-  // экспорт в Excel
+  // Экспорт в Excel
   @Get('export')
   async export(@Query() query: ListPurchasesDto, @Res() res: Response) {
     const { buffer, filename } = await this.service.export(query);
-    // Безопасное кодирование имени файла для заголовка Content-Disposition
     const encodedFilename = encodeURIComponent(filename)
-      .replace(/'/g, '%27') // Заменяем одинарные кавычки
-      .replace(/"/g, '%22'); // Заменяем двойные кавычки
+      .replace(/'/g, '%27')
+      .replace(/"/g, '%22');
+
     res.set({
       'Content-Type':
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'Content-Disposition': `attachment; filename*=UTF-8''${encodedFilename}`,
     });
+
     return res.end(buffer);
   }
+
+  // Получение одной закупки
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<PurchaseLean> {
+  async findOne(@Param('id') id: string): Promise<Purchase> {
     return this.service.findOne(id);
   }
 
+  // Создание закупки
   @Post()
-  create(@Body() dto: Partial<Purchase>): Promise<PurchaseLean> {
+  async create(@Body() dto: Partial<Purchase>): Promise<Purchase> {
     return this.service.create(dto);
   }
 
-  // фронт вызывает PATCH
+  // Обновление закупки
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() dto: Partial<Purchase>
-  ): Promise<PurchaseLean> {
+  ): Promise<Purchase> {
     return this.service.update(id, dto);
   }
 
-  // смена статуса с комментариями
+  // Смена статуса
   @Patch(':id/status')
   @HttpCode(200)
-  setStatus(
+  async setStatus(
     @Param('id') id: string,
     @Body() dto: SetStatusDto
-  ): Promise<PurchaseLean> {
+  ): Promise<Purchase> {
     return this.service.setStatus(id, dto.status, dto.comment);
   }
 
+  // Удаление закупки
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.service.remove(id);
     return { deleted: true };
   }
 
-  // batch: принимает JSON с Excel, распарсенный на фронте
+  // Batch-операции
   @Post('batch')
   @HttpCode(200)
   async batch(
@@ -93,18 +97,22 @@ export class PurchasesController {
     body: {
       items: Partial<Purchase>[];
       mode?: 'insert' | 'upsert';
-      matchBy?: keyof Purchase; // для upsert, по умолчанию 'entryNumber'
+      matchBy?: keyof Purchase;
     }
   ): Promise<BatchResult> {
     if (!body || !Array.isArray(body.items) || body.items.length === 0) {
       throw new BadRequestException('Body.items must be a non-empty array');
     }
+
     const mode = body.mode ?? 'upsert';
     if (mode === 'insert') {
-      return this.service.batchInsert(body.items);
+      throw new BadRequestException('Insert mode is not supported yet');
+      // Если захочешь добавить batchInsert, раскомментируй и реализуй в сервисе
+      // return this.service.batchInsert(body.items);
     }
+
     return this.service.batchUpsert(body.items, {
-      matchBy: (body.matchBy as any) ?? 'entryNumber',
+      matchBy: body.matchBy ?? 'entryNumber',
       writeStatusHistoryOnInsert: true,
     });
   }
