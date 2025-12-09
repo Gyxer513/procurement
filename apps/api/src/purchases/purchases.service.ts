@@ -22,7 +22,7 @@ export class PurchasesService {
     private readonly purchaseModel: Model<PurchaseDocument>
   ) {}
 
-  // Универсальный парсер даты (string | number | Date)
+  // Универсальный парсер даты (string.ts | number.ts | Date)
   private parseDate(v?: string | number | Date) {
     if (v === null || v === undefined || v === '') return undefined;
 
@@ -381,9 +381,9 @@ export class PurchasesService {
     if (input.site) out.site = input.site as PurchaseSite;
 
     // Пустые строки -> undefined
-    for (const k of Object.keys(out)) {
-      if (typeof out[k] === 'string' && out[k].trim() === '') {
-        out[k] = undefined;
+    for (const [k, v] of Object.entries(out)) {
+      if (typeof v === 'string' && v.trim() === '') {
+        (out as any)[k] = undefined;
       }
     }
 

@@ -3,7 +3,7 @@ import { Flex, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { CreatePurchaseModal } from '../../../features/Purchases/create/ui/CreatePurchaseModal';
 import { EditPurchaseModal } from '../../../features/Purchases/edit/ui/EditPurchaseModal';
-import { buildPurchaseColumns } from '../../../entities/purchase/lib/columns';
+import { buildPurchaseColumns } from '@entities/purchase/lib/columns';
 import { ColumnsVisibility } from '../../../widgets/columns-visibility/ui/ColumnsVisibility';
 import { FiltersBar } from '../../../widgets/purchase-filters/ui/FiltersBar';
 import { PurchasesGrid } from '../../../widgets/purchases-table/ui/PurchasesGrid';

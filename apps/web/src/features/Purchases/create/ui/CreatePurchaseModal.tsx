@@ -1,6 +1,6 @@
 import { Modal, Form, message } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { purchasesApi } from '../../../../shared/api/purchases';
+import { purchasesApi } from '@shared/api/purchases';
 import { PurchaseForm, PurchaseFormValues } from '../../form/ui/PurchaseForm';
 
 type Props = {

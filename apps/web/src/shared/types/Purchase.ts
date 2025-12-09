@@ -66,3 +66,4 @@ export type BatchResponse = {
 
 export type PurchaseCreateDto = Omit<Purchase, '_id' | 'createdAt' | 'updatedAt'>;
 export type PurchaseUpdateDto = Partial<PurchaseCreateDto>;
+export type Field = keyof Purchase;
