@@ -21,7 +21,6 @@ export class PurchasesService {
     private readonly changeStatusUseCase: ChangeStatusUseCase,
     private readonly exportUseCase: ExportPurchasesUseCase,
 
-    // ВОТ ЭТО ИСПРАВЛЕНИЕ — используем токен!
     @Inject('IPurchaseRepository')
     private readonly purchaseRepository: IPurchaseRepository
   ) {}
@@ -35,13 +34,13 @@ export class PurchasesService {
   setStatus = (id: string, status: PurchaseStatus, comment?: string) =>
     this.changeStatusUseCase.execute(id, status, comment);
   remove = async (id: string) => {
-    await this.getUseCase.execute(id); // проверяем существование
+    await this.getUseCase.execute(id);
     // потом soft-delete
   };
   export = (dto: any) => this.exportUseCase.execute(dto);
 
   // Batch-операции
-  async batchUpsert(
+    async batchUpsert(
     items: Partial<Purchase>[],
     options: {
       matchBy?: keyof Purchase;

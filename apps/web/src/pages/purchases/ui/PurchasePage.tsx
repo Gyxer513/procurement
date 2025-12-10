@@ -42,7 +42,7 @@ export function PurchasePage() {
     setEditOpen(false);
     setEditing(null);
   };
-  const openView = (rec: Purchase) => navigate(`/purchases/${rec._id}`);
+  const openView = (rec: Purchase) => navigate(`/purchases/${rec.id}`);
   const allColumns: ColumnsType<Purchase> = useMemo(
     () => buildPurchaseColumns(openEdit, openView),
     []

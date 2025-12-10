@@ -1,5 +1,5 @@
 export type Purchase = {
-  _id: string;
+  id: string;
   entryNumber?: string;
   contractSubject?: string;
   supplierName?: string;

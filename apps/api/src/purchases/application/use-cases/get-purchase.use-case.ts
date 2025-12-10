@@ -1,11 +1,11 @@
-import { Injectable, Inject } from '@nestjs/common'; // ←←←←←←←←←←←←←←←←←←←←←
+import { Injectable, Inject } from '@nestjs/common';
 import { Purchase } from '../../domain/entities/purchase.entity';
 import { IPurchaseRepository } from '../../domain/interfaces/purchase.repository.interface';
 
 @Injectable()
 export class GetPurchaseUseCase {
   constructor(
-    @Inject('IPurchaseRepository') // ← теперь Nest видит этот декоратор!
+    @Inject('IPurchaseRepository')
     private readonly purchaseRepo: IPurchaseRepository
   ) {}
 

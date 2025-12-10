@@ -5,6 +5,7 @@ import { StatusHistoryEntry } from '../value-objects/status-history.vo';
 export class Purchase {
   id?: string;
   entryNumber?: string;
+  entryDate: Date;
   contractSubject?: string;
   supplierName?: string;
   smp?: boolean;

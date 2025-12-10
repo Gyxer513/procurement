@@ -5,6 +5,7 @@ import { PurchaseForm, PurchaseFormValues } from '../../form/ui/PurchaseForm';
 import dayjs from 'dayjs';
 import { Purchase } from '@shared/types/Purchase';
 import { useEffect } from 'react';
+
 type Props = {
   open: boolean;
   purchase?: Purchase | null;
@@ -23,7 +24,7 @@ export function EditPurchaseModal({ open, purchase, onClose }: Props) {
   const qc = useQueryClient();
 
   const { mutateAsync, isLoading } = useMutation({
-    mutationFn: (payload: any) => purchasesApi.update(purchase!._id, payload),
+    mutationFn: (payload: any) => purchasesApi.update(purchase!.id, payload),
     onSuccess: () => {
       message.success('Изменения сохранены');
       qc.invalidateQueries({ queryKey: ['Purchases'] });

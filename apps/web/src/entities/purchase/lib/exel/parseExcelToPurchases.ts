@@ -6,8 +6,7 @@ import {
   toCompleted,
   toNumber,
 } from '@/lib';
-import type { Purchase } from '@shared/types/Purchase';
-type Field = keyof Purchase;
+import type { Field, Purchase } from '@shared/types/Purchase';
 import {
   DATE_FIELDS,
   EXACT,

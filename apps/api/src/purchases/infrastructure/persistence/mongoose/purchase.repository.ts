@@ -1,12 +1,11 @@
-// src/purchases/infrastructure/persistence/mongoose/purchase.repository.ts
-
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ClientSession, Types } from 'mongoose';
 import { Purchase } from '../../../domain/entities/purchase.entity';
 import { IPurchaseRepository } from '../../../domain/interfaces/purchase.repository.interface';
 import { PurchaseDocument, PurchaseDoc } from './schemas/purchase.schema';
-import { PurchaseStatus } from '../../../domain/enums/purchase-status.enum';
+import { PurchaseStatus } from '../../../domain';
+import { parseEntryNumberAndDate } from '../../../application/utils/entry-parser';
 
 @Injectable()
 export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
@@ -20,6 +19,33 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
       { entryNumber: 1 },
       { unique: true, sparse: true }
     );
+  }
+
+  private normalizeEntryFields(doc: Partial<Purchase>): Partial<Purchase> {
+    // поддержим разные входы: incomingNumber / entryRaw / entryNumber
+    const combined =
+      (doc as any).incomingNumber ?? (doc as any).entryRaw ?? doc.entryNumber;
+
+    if (typeof combined === 'string' && combined.trim()) {
+      const parsed = parseEntryNumberAndDate(combined);
+
+      // если entryNumber выглядит как "номер от дата" — всегда заменим на "чистый" номер
+      // если даты нет в dto — поставим распарсенную
+      const shouldReplaceNumber =
+        parsed.entryNumber &&
+        (/(^|[^а-яa-z])от([^а-яa-z]|$)/i.test(combined) ||
+          /\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}/.test(combined));
+
+      return {
+        ...doc,
+        entryNumber: shouldReplaceNumber
+          ? parsed.entryNumber
+          : doc.entryNumber ?? parsed.entryNumber,
+        entryDate: doc.entryDate ?? parsed.entryDate,
+      };
+    }
+
+    return doc;
   }
 
   // ──────────────────────────────────────────────────────────────
@@ -146,7 +172,10 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
     const { matchBy, writeStatusHistoryOnInsert, session } = options;
     const now = new Date();
 
-    const ops = items
+    // Нормализуем номер/дату до записи
+    const normalizedItems = items.map((i) => this.normalizeEntryFields(i));
+
+    const ops = normalizedItems
       .filter((item) => item[matchBy] != null)
       .map((doc) => {
         const filter = { [matchBy]: doc[matchBy] };
