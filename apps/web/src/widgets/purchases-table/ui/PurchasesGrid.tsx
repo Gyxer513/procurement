@@ -14,7 +14,13 @@ type Props = {
   onChange: TableProps<Purchase>['onChange'];
 };
 
-export function PurchasesGrid({ loading, columns, data, pagination, onChange }: Props) {
+export function PurchasesGrid({
+  loading,
+  columns,
+  data,
+  pagination,
+  onChange,
+}: Props) {
   return (
     <Table<Purchase>
       rowKey="id"
@@ -31,7 +37,7 @@ export function PurchasesGrid({ loading, columns, data, pagination, onChange }: 
       }}
       onChange={onChange}
       sticky
-      scroll={{ x: 2700, y: 600 }}
+      scroll={{ x: 2700 }}
     />
   );
 }

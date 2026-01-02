@@ -1,15 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Flex, Typography } from 'antd';
+import { CheckboxOptionType, Flex, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { CreatePurchaseModal } from '../../../features/Purchases/create/ui/CreatePurchaseModal';
-import { EditPurchaseModal } from '../../../features/Purchases/edit/ui/EditPurchaseModal';
+import { CreatePurchaseModal } from '@features/Purchases/create/ui/CreatePurchaseModal';
+import { EditPurchaseModal } from '@features/Purchases/edit/ui/EditPurchaseModal';
 import { buildPurchaseColumns } from '@entities/purchase/lib/columns';
-import { ColumnsVisibility } from '../../../widgets/columns-visibility/ui/ColumnsVisibility';
-import { FiltersBar } from '../../../widgets/purchase-filters/ui/FiltersBar';
-import { PurchasesGrid } from '../../../widgets/purchases-table/ui/PurchasesGrid';
-import { hooks } from '../../../entities/purchase/model/hooks';
-import type { Purchase } from '../../../shared/types/Purchase';
-import { PURCHASE_COLUMN_KEYS } from '../../../shared/utils/Constants';
+import { ColumnsVisibility } from '@widgets/columns-visibility/ui/ColumnsVisibility';
+import { FiltersBar } from '@widgets/purchase-filters/ui/FiltersBar';
+import { PurchasesGrid } from '@widgets/purchases-table/ui/PurchasesGrid';
+import { hooks } from '@entities/purchase/model/hooks';
+import type { Purchase } from '@shared/types/Purchase';
 import { useNavigate } from 'react-router-dom';
 const { Text } = Typography;
 
@@ -48,13 +47,22 @@ export function PurchasePage() {
     []
   );
 
-  const [checkedList, setCheckedList] =
-    useState<string[]>(PURCHASE_COLUMN_KEYS);
+  const [visibleKeys, setVisibleKeys] = useState<string[] | null>(null);
 
-  const visibleColumns = useMemo(
-    () => allColumns.filter((c) => checkedList.includes(String(c.key))),
-    [allColumns, checkedList]
+  const options: CheckboxOptionType[] = allColumns.map(
+    (c: any, idx: number) => ({
+      label: String(c.title ?? c.key ?? `col_${idx}`),
+      value: String(c.key ?? c.dataIndex ?? `col_${idx}`),
+    })
   );
+
+  const columns: ColumnsType<Purchase> =
+    visibleKeys === null
+      ? allColumns
+      : allColumns.filter((c: any, idx: number) => {
+          const key = String(c.key ?? c.dataIndex ?? `col_${idx}`);
+          return visibleKeys.includes(key);
+        });
 
   return (
     <Flex vertical gap="middle" style={{ width: '100%' }}>
@@ -70,19 +78,11 @@ export function PurchasePage() {
         onExport={handleExport}
         onCreate={() => setCreateOpen(true)}
       />
-
-      <ColumnsVisibility
-        options={allColumns.map(({ key, title }) => ({
-          label: title as string,
-          value: String(key),
-        }))}
-        checkedList={checkedList}
-        onChange={setCheckedList}
-      />
+      <ColumnsVisibility options={options} onChange={setVisibleKeys} />
 
       <PurchasesGrid
         loading={isLoading}
-        columns={visibleColumns}
+        columns={columns}
         data={data?.items || []}
         pagination={{
           current: query.page,

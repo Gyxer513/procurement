@@ -31,8 +31,6 @@ export class Purchase {
   planNumber?: string;
   applicationAmount?: number;
   comment?: string;
-
-  // Новые поля
   status: PurchaseStatus = PurchaseStatus.InProgress;
   site?: PurchaseSite;
   bankGuaranteeValidFrom?: Date;
