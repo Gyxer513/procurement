@@ -7,16 +7,31 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
 import { App } from '@app/App';
 import { StrictMode } from 'react';
+import { keycloak } from './auth/keycloak';
+
 dayjs.locale('ru');
 
 const queryClient = new QueryClient();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ConfigProvider locale={ruRU}>
-        <App />
-      </ConfigProvider>
-    </QueryClientProvider>
-  </StrictMode>
-);
+async function bootstrap() {
+  await keycloak.init({
+    onLoad: 'login-required',
+    pkceMethod: 'S256',
+    checkLoginIframe: false,
+  });
+
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ConfigProvider locale={ruRU}>
+          <App />
+        </ConfigProvider>
+      </QueryClientProvider>
+    </StrictMode>
+  );
+}
+
+bootstrap().catch((e) => {
+  // можно вывести на страницу/в консоль
+  console.error('Keycloak init failed', e);
+});

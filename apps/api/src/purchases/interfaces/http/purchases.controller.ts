@@ -10,20 +10,18 @@ import {
   Res,
   HttpCode,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PurchasesService } from '../../application/services/purchases.service';
 import { Purchase } from '../../domain/entities/purchase.entity';
 import { ListPurchasesDto } from '../../application/dto/list-purchases.dto';
 import { SetStatusDto } from '../../application/dto/set-status.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Roles, RolesGuard } from '../../../auth/roles.guard';
+import { BatchResult } from '../../domain/entities/BatchResult.type';
 
-type BatchResult = {
-  inserted?: number;
-  upserted?: number;
-  modified?: number;
-  matched?: number;
-};
-
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('purchases')
 export class PurchasesController {
   constructor(private readonly service: PurchasesService) {}
@@ -90,6 +88,7 @@ export class PurchasesController {
   }
 
   // Batch-операции
+  @Roles('senior_admin')
   @Post('batch')
   @HttpCode(200)
   async batch(
