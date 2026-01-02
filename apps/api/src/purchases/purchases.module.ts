@@ -24,6 +24,7 @@ import {
   PurchaseDocument,
   PurchaseSchema,
 } from './infrastructure/persistence/mongoose/schemas/purchase.schema';
+import { EntryNumberService } from './domain/interfaces/services/entry-number.service';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import {
       provide: 'IPurchaseRepository',
       useClass: PurchaseRepository,
     },
+    { provide: 'IEntryNumberService', useClass: EntryNumberService },
   ],
   exports: [PurchasesService],
 })

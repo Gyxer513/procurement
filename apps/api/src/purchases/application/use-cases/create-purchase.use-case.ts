@@ -2,24 +2,24 @@ import { Injectable, Inject } from '@nestjs/common';
 import { Purchase } from '../../domain/entities/purchase.entity';
 import { IPurchaseRepository } from '../../domain/interfaces/purchase.repository.interface';
 import { parseEntryNumberAndDate } from '../utils/entry-parser';
+import { IEntryNumberService } from '../../domain/entities/entry-number.service.interface';
 
 @Injectable()
 export class CreatePurchaseUseCase {
   constructor(
     @Inject('IPurchaseRepository')
-    private readonly purchaseRepo: IPurchaseRepository
+    private readonly purchaseRepo: IPurchaseRepository,
+
+    @Inject('IEntryNumberService')
+    private readonly entryNumberService: IEntryNumberService
   ) {}
 
   private sanitize(dto: Partial<Purchase>): any {
     const data = { ...(dto as any) };
 
-    // Удаляем вычисляемые/системные поля, чтобы не пытаться их сетить
-    delete data.remainingContractAmount; // геттер
+    delete data.remainingContractAmount;
     delete data.createdAt;
     delete data.updatedAt;
-    // Если статус/историю будете выставлять здесь — входящие statusHistory/lastStatusChangedAt тоже лучше убрать, чтобы не перетирать вашей логикой:
-    // delete data.statusHistory;
-    // delete data.lastStatusChangedAt;
 
     return data;
   }
@@ -27,7 +27,7 @@ export class CreatePurchaseUseCase {
   async execute(dto: Partial<Purchase>): Promise<Purchase> {
     const data: any = this.sanitize(dto);
 
-    // Нормализация "956-вн/ск от 23.07.2025" -> entryNumber + entryDate
+    // 1) Импортный формат "956-вн/ск от 23.07.2025"
     const combined = data.incomingNumber ?? data.entryRaw ?? data.entryNumber;
     if (typeof combined === 'string' && combined.trim()) {
       const parsed = parseEntryNumberAndDate(combined);
@@ -36,7 +36,14 @@ export class CreatePurchaseUseCase {
         data.entryDate = parsed.entryDate;
     }
 
-    // Если нужно — пишем историю статуса при создании (как в bulkUpsert)
+    // 2) Системное присвоение для новых записей:
+    //    если entryNumber/entryDate не пришли (и не распарсились) — генерируем
+    if (!data.entryDate) data.entryDate = new Date();
+    if (!data.entryNumber)
+      data.entryNumber =
+        await this.entryNumberService.nextPurchaseEntryNumber();
+
+    // 3) История статуса при создании
     if (
       data.status &&
       (!Array.isArray(data.statusHistory) || data.statusHistory.length === 0)
@@ -46,7 +53,6 @@ export class CreatePurchaseUseCase {
       data.lastStatusChangedAt = now;
     }
 
-    // Критично: НЕ создаём инстанс класса и не делаем Object.assign — передаём plain-объект
     return this.purchaseRepo.create(data as unknown as Purchase);
   }
 }
