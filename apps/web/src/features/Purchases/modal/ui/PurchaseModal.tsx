@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 import { useEffect } from 'react';
 import type { Purchase } from '@shared/types/Purchase';
 import type { PurchaseFormValues } from '@features/Purchases/form/types/PurchaseFormValues';
+import type { PurchaseStatus } from '@shared/enums/purchase-status.enum';
 
 type Props = {
   open: boolean;
@@ -23,7 +24,11 @@ function toDay(v?: string | Date | null) {
 export function PurchaseModal({ open, purchase, onClose }: Props) {
   const [form] = Form.useForm<PurchaseFormValues>();
   const qc = useQueryClient();
-  const isEdit = Boolean(purchase); // флаг: создаём или редактируем
+  const isEdit = !!purchase;
+
+  // Прокидываем id и status из purchase, если есть
+  const id = purchase?.id;
+  const status = purchase?.status as PurchaseStatus | undefined;
 
   // Установка начальных значений для редактирования
   useEffect(() => {
@@ -36,6 +41,8 @@ export function PurchaseModal({ open, purchase, onClose }: Props) {
         contractSubject: purchase.contractSubject,
         supplierName: purchase.supplierName,
         smp: purchase.smp,
+        status: purchase.status,
+        site: purchase.site,
         supplierInn: purchase.supplierInn,
         initialPrice: purchase.initialPrice,
         purchaseAmount: purchase.purchaseAmount,
@@ -67,7 +74,7 @@ export function PurchaseModal({ open, purchase, onClose }: Props) {
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (payload: any) => {
       if (isEdit) {
-        return purchasesApi.update((purchase as Purchase).id, payload);
+        return purchasesApi.update(id as string, payload);
       } else {
         return purchasesApi.create(payload);
       }
@@ -125,7 +132,13 @@ export function PurchaseModal({ open, purchase, onClose }: Props) {
         </Button>,
       ]}
     >
-      <PurchaseForm form={form} isCreate={!isEdit} />
+      <PurchaseForm
+        form={form}
+        isCreate={!isEdit}
+        initialValues={purchase || undefined}
+        id={id}
+        status={status}
+      />
     </Modal>
   );
 }

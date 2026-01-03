@@ -51,7 +51,7 @@ export const PurchaseDetailsPage = () => {
       (purchase?.currentContractAmount ?? 0) -
         (purchase?.performanceAmount ?? 0)
     );
-
+  console.log('purchase statusHistory', purchase);
   return (
     <Space orientation="vertical" size="large" style={{ width: '100%' }}>
       <Space wrap>
@@ -279,7 +279,7 @@ export const PurchaseDetailsPage = () => {
               <Divider />
 
               <Card size="small" title="История статусов">
-                <PurchaseStatusTimeline history={purchase.statusHistory} />
+                <PurchaseStatusTimeline history={purchase._statusHistory} />
               </Card>
             </Col>
           </Row>

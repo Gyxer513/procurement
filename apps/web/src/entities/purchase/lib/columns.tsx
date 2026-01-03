@@ -2,15 +2,7 @@ import { Button, Tag, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { Purchase } from '@shared/types/Purchase';
 import { fmtDate, rub } from '@shared/utils/format';
-
-const STATUS_COLORS: Record<string, string> = {
-  'в работе': 'blue',
-  'на рассмотрении': 'gold',
-  'получено отделом закупок': 'geekblue',
-  'на доработку': 'orange',
-  отказано: 'red',
-  аннулировано: 'default',
-};
+import { STATUS_COLORS } from '@shared/enums/statusColors';
 
 const SITE_COLORS: Record<string, string> = {
   Скатертный: 'magenta',
@@ -19,7 +11,7 @@ const SITE_COLORS: Record<string, string> = {
 };
 
 export function buildPurchaseColumns(
-  onOpen: (p: Purchase) => void,
+  onOpen: (p: Purchase) => void
 ): ColumnsType<Purchase> {
   return [
     {
@@ -48,11 +40,10 @@ export function buildPurchaseColumns(
       width: 160,
       sorter: true,
       render: (v: string, record) => {
-        const color = STATUS_COLORS[v] ?? 'default';
         const dateText = fmtDate(record.lastStatusChangedAt as any);
         return (
           <Tooltip title={dateText ? `Изменен: ${dateText}` : undefined}>
-            <Tag color={color}>{v || '-'}</Tag>
+            <Tag color={STATUS_COLORS[v] ?? 'default'}>{v || '-'}</Tag>
           </Tooltip>
         );
       },

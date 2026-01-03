@@ -19,13 +19,21 @@ type Props = {
   form: any;
   initialValues?: any;
   isCreate?: boolean;
+  id?: string;
+  status?: PurchaseStatus;
 };
 
 const toDayjs = (v?: Date | string) => (v ? dayjs(v) : undefined);
 
 const has = (roles: string[], role: Role) => roles.includes(role);
 
-export function PurchaseForm({ form, initialValues, isCreate = false }: Props) {
+export function PurchaseForm({
+  form,
+  initialValues,
+  isCreate = false,
+  id,
+  status,
+}: Props) {
   const roles = useUserRoles();
 
   const isSenior = has(roles, Role.SeniorAdmin);
@@ -83,7 +91,7 @@ export function PurchaseForm({ form, initialValues, isCreate = false }: Props) {
   // - ReadOnly: всё disabled (но рисуем для просмотра)
   const disableEntryDate = true;
   const disableEntryNumber = readOnly || isProc; // procurement не меняет номер
-
+  console.log('form:', form);
   return (
     <Form form={form} layout="vertical">
       {isAdminCreate && (
@@ -96,6 +104,8 @@ export function PurchaseForm({ form, initialValues, isCreate = false }: Props) {
       {renderFull && (
         <>
           <MetaSection
+            id={id}
+            status={status}
             isCreate={isCreate}
             readOnly={readOnly}
             disableEntryNumber={disableEntryNumber}

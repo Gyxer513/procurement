@@ -1,3 +1,6 @@
+import { PurchaseStatus } from '@shared/enums/purchase-status.enum';
+import { PurchaseSite } from '@shared/enums/purchase-site.enum';
+
 export type Purchase = {
   id: string;
   entryNumber?: string;
@@ -28,13 +31,17 @@ export type Purchase = {
   comment?: string;
   createdAt?: string;
   updatedAt?: string;
-  status: string
-  site: string
-  bankGuaranteeValidFrom?: string | Date
-  bankGuaranteeValidTo?: string | Date
-  lastStatusChangedAt?: string | Date
-  remainingContractAmount?: number
-  statusHistory?: { status: string; changedAt: string | Date; comment?: string }[]
+  status: PurchaseStatus;
+  site: PurchaseSite;
+  bankGuaranteeValidFrom?: string | Date;
+  bankGuaranteeValidTo?: string | Date;
+  lastStatusChangedAt?: string | Date;
+  remainingContractAmount?: number;
+  _statusHistory?: {
+    status: PurchaseStatus;
+    changedAt: string;
+    comment?: string;
+  }[];
 };
 
 export type Paginated<T> = { items: T[]; total: number };
@@ -47,14 +54,14 @@ export type PurchaseListParams = {
   q?: string;
   completed?: boolean;
   responsible?: string;
-  status?: string
-  site?: string
-  lastStatusChangedFrom?: string
-  lastStatusChangedTo?: string
-  bankGuaranteeFromFrom?: string
-  bankGuaranteeFromTo?: string
-  bankGuaranteeToFrom?: string
-  bankGuaranteeToTo?: string
+  status?: string;
+  site?: string;
+  lastStatusChangedFrom?: string;
+  lastStatusChangedTo?: string;
+  bankGuaranteeFromFrom?: string;
+  bankGuaranteeFromTo?: string;
+  bankGuaranteeToFrom?: string;
+  bankGuaranteeToTo?: string;
 };
 
 export type BatchResponse = {
@@ -64,6 +71,9 @@ export type BatchResponse = {
   matched?: number;
 };
 
-export type PurchaseCreateDto = Omit<Purchase, '_id' | 'createdAt' | 'updatedAt'>;
+export type PurchaseCreateDto = Omit<
+  Purchase,
+  '_id' | 'createdAt' | 'updatedAt'
+>;
 export type PurchaseUpdateDto = Partial<PurchaseCreateDto>;
 export type Field = keyof Purchase;
