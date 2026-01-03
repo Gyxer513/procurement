@@ -43,7 +43,7 @@ export function PurchasePage() {
   };
   const openView = (rec: Purchase) => navigate(`/purchases/${rec.id}`);
   const allColumns: ColumnsType<Purchase> = useMemo(
-    () => buildPurchaseColumns(openEdit, openView),
+    () => buildPurchaseColumns(openView),
     []
   );
 
@@ -89,12 +89,15 @@ export function PurchasePage() {
           pageSize: query.pageSize,
           total: data?.total || 0,
         }}
+        onRow={(record) => ({
+          onDoubleClick: () => openEdit(record),
+        })}
         onChange={(pagination, _filters, sorter) => {
           const s = Array.isArray(sorter) ? sorter[0] : sorter;
           setQuery((q) => ({
             ...q,
-            page: pagination.current || 1,
-            pageSize: pagination.pageSize || 20,
+            page: Number(pagination.current) || 1,
+            pageSize: Number(pagination.pageSize) || 20,
             sortBy: s?.field ? String(s.field) : q.sortBy,
             sortOrder:
               s?.order === 'ascend'

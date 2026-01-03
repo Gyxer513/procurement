@@ -1,7 +1,8 @@
 import { Modal, Form, message } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { purchasesApi } from '@shared/api/purchases';
-import { PurchaseForm, PurchaseFormValues } from '../../form/ui/PurchaseForm';
+import { PurchaseForm } from '../../form/ui/PurchaseForm';
+import { PurchaseFormValues } from '@features/Purchases/form/types/PurchaseFormValues';
 
 type Props = {
   open: boolean;
@@ -20,7 +21,7 @@ export function CreatePurchaseModal({ open, onClose }: Props) {
     mutationFn: (payload: any) => purchasesApi.create(payload),
     onSuccess: () => {
       message.success('Закупка создана');
-// Обновить список; достаточно по префиксу 'Purchases'
+      // Обновить список; достаточно по префиксу 'Purchases'
       qc.invalidateQueries({ queryKey: ['Purchases'] });
       onClose();
     },
@@ -43,7 +44,7 @@ export function CreatePurchaseModal({ open, onClose }: Props) {
       await mutateAsync(payload);
       form.resetFields();
     } catch {
-// ошибки валидации — ничего
+      // ошибки валидации — ничего
     }
   };
 
@@ -62,7 +63,7 @@ export function CreatePurchaseModal({ open, onClose }: Props) {
       destroyOnClose
       width={900}
     >
-      <PurchaseForm form={form} />
+      <PurchaseForm form={form} isCreate />
     </Modal>
   );
 }

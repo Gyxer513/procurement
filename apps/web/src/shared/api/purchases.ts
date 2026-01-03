@@ -88,13 +88,13 @@ export class PurchasesApi {
   }
 
   // Смена статуса
-  async setStatus(id: string, payload: { status: string; comment?: string }) {
+  async setStatus(id: string, status: string, comment?: string) {
     const url = new URL(`${this.baseUrl.href}${id}/status`);
     const res = await authFetch(url.href, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ status, comment }),
     });
     return checkResponse<Purchase>(res);
   }

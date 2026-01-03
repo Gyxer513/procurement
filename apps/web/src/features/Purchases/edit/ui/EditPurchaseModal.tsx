@@ -1,10 +1,11 @@
 import { Modal, Form, message } from 'antd';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { purchasesApi } from '@shared/api/purchases';
-import { PurchaseForm, PurchaseFormValues } from '../../form/ui/PurchaseForm';
+import { PurchaseForm } from '../../form/ui/PurchaseForm';
 import dayjs from 'dayjs';
 import { Purchase } from '@shared/types/Purchase';
 import { useEffect } from 'react';
+import { PurchaseFormValues } from '@features/Purchases/form/types/PurchaseFormValues';
 
 type Props = {
   open: boolean;
@@ -98,7 +99,7 @@ export function EditPurchaseModal({ open, purchase, onClose }: Props) {
       destroyOnClose
       width={900}
     >
-      <PurchaseForm form={form} />
+      <PurchaseForm form={form} isCreate={false} />
     </Modal>
   );
 }

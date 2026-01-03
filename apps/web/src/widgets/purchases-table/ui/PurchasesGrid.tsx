@@ -6,6 +6,7 @@ type Props = {
   loading: boolean;
   columns: ColumnsType<Purchase>;
   data: Purchase[];
+  onRow?: TableProps<Purchase>['onRow'];
   pagination: {
     current: number;
     pageSize: number;
@@ -20,6 +21,7 @@ export function PurchasesGrid({
   data,
   pagination,
   onChange,
+  onRow,
 }: Props) {
   return (
     <Table<Purchase>
@@ -29,15 +31,14 @@ export function PurchasesGrid({
       columns={columns}
       dataSource={data}
       pagination={{
-        current: pagination.current,
-        pageSize: pagination.pageSize,
-        total: pagination.total,
+        ...pagination,
         showSizeChanger: true,
         showTotal: (t, range) => `${range[0]}–${range[1]} из ${t}`,
       }}
       onChange={onChange}
       sticky
       scroll={{ x: 2700 }}
+      onRow={onRow}
     />
   );
 }

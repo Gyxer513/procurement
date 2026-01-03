@@ -19,7 +19,6 @@ async function bootstrap() {
     pkceMethod: 'S256',
     checkLoginIframe: false,
   });
-
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>

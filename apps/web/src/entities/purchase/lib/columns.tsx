@@ -19,8 +19,7 @@ const SITE_COLORS: Record<string, string> = {
 };
 
 export function buildPurchaseColumns(
-  onEdit: (p: Purchase) => void,
-  onOpen: (p: Purchase) => void
+  onOpen: (p: Purchase) => void,
 ): ColumnsType<Purchase> {
   return [
     {
@@ -30,8 +29,18 @@ export function buildPurchaseColumns(
       width: 160,
       ellipsis: true,
       sorter: true,
+      render: (value: string, record) => (
+        <a
+          style={{ cursor: 'pointer' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen(record);
+          }}
+        >
+          {value}
+        </a>
+      ),
     },
-
     {
       title: 'Статус',
       dataIndex: 'status',
@@ -279,23 +288,6 @@ export function buildPurchaseColumns(
       key: 'comment',
       width: 240,
       ellipsis: true,
-    },
-
-    {
-      title: 'Действия',
-      key: 'actions',
-      width: 160,
-      fixed: 'right' as const,
-      render: (_: any, record: Purchase) => (
-        <>
-          <Button type="link" onClick={() => onOpen(record)}>
-            Открыть
-          </Button>
-          <Button type="link" onClick={() => onEdit(record)}>
-            Изменить
-          </Button>
-        </>
-      ),
     },
   ];
 }
