@@ -3,7 +3,7 @@ export type Purchase = {
   entryNumber?: string;
   contractSubject?: string;
   supplierName?: string;
-  smp?: string;
+  smp?: boolean;
   supplierInn?: string;
   purchaseAmount?: number;
   contractNumber?: string;
