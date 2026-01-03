@@ -14,15 +14,8 @@ import { fmtDate, rub } from '@shared/utils/format';
 import { Purchase } from '@shared/types/Purchase';
 import { purchasesApi } from '@shared/api/purchases';
 import PurchaseStatusTimeline from '../../../widgets/status-timeline/ui/PurchaseStatusTimeline';
+import { STATUS_COLORS } from '@shared/enums/statusColors';
 
-const STATUS_COLORS: Record<string, string> = {
-  'в работе': 'blue',
-  'на рассмотрении': 'gold',
-  'получено отделом закупок': 'geekblue',
-  'на доработку': 'orange',
-  отказано: 'red',
-  аннулировано: 'default',
-};
 const SITE_COLORS: Record<string, string> = {
   Скатертный: 'magenta',
   Ломоносовский: 'purple',

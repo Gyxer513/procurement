@@ -45,7 +45,10 @@ export function PurchasePage() {
     () => buildPurchaseColumns(openView),
     []
   );
-
+  const [dateRange, setDateRange] = useState<[string | null, string | null]>([
+    null,
+    null,
+  ]);
   const [visibleKeys, setVisibleKeys] = useState<string[] | null>(null);
 
   const options: CheckboxOptionType[] = allColumns.map(
@@ -72,13 +75,15 @@ export function PurchasePage() {
         setCompleted={setCompleted}
         responsible={responsible}
         setResponsible={setResponsible}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
         onApply={applyFilters}
         onReset={resetFilters}
         onExport={handleExport}
         onCreate={() => setCreateOpen(true)}
-      />
-      <ColumnsVisibility options={options} onChange={setVisibleKeys} />
-
+      >
+        <ColumnsVisibility options={options} onChange={setVisibleKeys} />
+      </FiltersBar>
       <PurchasesGrid
         loading={isLoading}
         columns={columns}

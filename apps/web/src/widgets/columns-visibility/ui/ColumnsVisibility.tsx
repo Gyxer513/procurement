@@ -1,7 +1,7 @@
-import { Button, Checkbox, Drawer, Space } from 'antd';
-import type { CheckboxOptionType } from 'antd';
+import { Button, Checkbox, CheckboxOptionType, Drawer, Space } from 'antd';
+import { SettingOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-import { useVisibleColumns } from '../hooks/useVisibleColumns';
+import { useVisibleColumns } from '@widgets/columns-visibility/hooks/useVisibleColumns';
 
 type Props = {
   options: CheckboxOptionType[];
@@ -15,13 +15,11 @@ export function ColumnsVisibility({
   storageKey = 'purchases.visibleColumns',
 }: Props) {
   const [open, setOpen] = useState(false);
-
   const { checkedList, setCheckedList, allValues } = useVisibleColumns(
     options,
     storageKey
   );
 
-  // Сообщаем родителю актуальный список (включая загрузку из localStorage)
   useEffect(() => {
     if (!options.length) return;
     onChange(checkedList);
@@ -29,8 +27,14 @@ export function ColumnsVisibility({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Столбцы</Button>
-
+      <Button
+        icon={<SettingOutlined />}
+        shape="circle"
+        size="small"
+        style={{ marginLeft: 4 }}
+        onClick={() => setOpen(true)}
+        title="Выбрать столбцы"
+      />
       <Drawer
         title="Отображаемые столбцы"
         open={open}
@@ -43,7 +47,6 @@ export function ColumnsVisibility({
             options={options}
             onChange={(value) => setCheckedList(value as string[])}
           />
-
           <Space>
             <Button size="small" onClick={() => setCheckedList(allValues)}>
               Показать все
