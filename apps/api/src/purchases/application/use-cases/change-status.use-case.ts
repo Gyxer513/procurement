@@ -20,9 +20,6 @@ export class ChangeStatusUseCase {
       throw new NotFoundException('Purchase not found');
     }
 
-    // Здесь можно добавить проверку допустимости перехода статусов
-    // например: из "отказано" нельзя перейти в "в работе" и т.д.
-
     return this.purchaseRepo.changeStatus(id, newStatus, comment);
   }
 }

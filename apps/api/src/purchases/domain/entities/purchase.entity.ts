@@ -5,6 +5,7 @@ import { StatusHistoryEntry } from '../value-objects/status-history.vo';
 export class Purchase {
   id?: string;
   entryNumber?: string;
+  entryDate: Date;
   contractSubject?: string;
   supplierName?: string;
   smp?: boolean;
@@ -30,8 +31,6 @@ export class Purchase {
   planNumber?: string;
   applicationAmount?: number;
   comment?: string;
-
-  // Новые поля
   status: PurchaseStatus = PurchaseStatus.InProgress;
   site?: PurchaseSite;
   bankGuaranteeValidFrom?: Date;

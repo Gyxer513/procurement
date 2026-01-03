@@ -1,34 +1,39 @@
 import { Timeline, Tag } from 'antd';
-import { Purchase } from '@/shared/types/Purchase';
-import { fmtDate } from '../../../shared/utils/format';
+import { fmtDate } from '@shared/utils/format';
+import { PurchaseStatus } from '@shared/enums/purchase-status.enum';
 
-const STATUS_COLORS: Record<string, string> = {
-  'в работе': 'blue',
-  'на рассмотрении': 'gold',
-  'получено отделом закупок': 'geekblue',
-  'на доработку': 'orange',
-  отказано: 'red',
-  аннулировано: 'default',
+const STATUS_COLORS: Record<PurchaseStatus | string, string> = {
+  [PurchaseStatus.InProgress]: 'blue',
+  [PurchaseStatus.UnderReview]: 'gold',
+  [PurchaseStatus.ReceivedByProcurement]: 'geekblue',
+  [PurchaseStatus.NeedsFix]: 'orange',
+  [PurchaseStatus.Rejected]: 'red',
+  [PurchaseStatus.Cancelled]: 'default',
+};
+
+type StatusHistoryItem = {
+  status: PurchaseStatus;
+  changedAt: string;
+  comment?: string;
 };
 
 type Props = {
-  history?: Purchase['statusHistory'];
-  compact?: boolean; // если нужно сжато отображать
+  history?: StatusHistoryItem[];
+  compact?: boolean;
 };
 
-export const PurchaseStatusTimeline: React.FC<Props> = ({
-  history,
-  compact,
-}) => {
-  const items = (history || [])
-    .slice()
+export const PurchaseStatusTimeline = ({ history, compact }: Props) => {
+  if (!history || history.length === 0) {
+    return <div style={{ color: '#999' }}>История статусов отсутствует</div>;
+  }
+
+  const items = [...history]
     .sort(
       (a, b) =>
-        new Date(a.changedAt as any).getTime() -
-        new Date(b.changedAt as any).getTime()
+        new Date(a.changedAt).getTime() - new Date(b.changedAt).getTime()
     )
     .map((h) => {
-      const dateText = fmtDate(h.changedAt as any);
+      const dateText = fmtDate(h.changedAt);
       const color = STATUS_COLORS[h.status] ?? 'default';
       return {
         color,
@@ -48,11 +53,7 @@ export const PurchaseStatusTimeline: React.FC<Props> = ({
       };
     });
 
-  if (!items.length) {
-    return <div style={{ color: '#999' }}>История статусов отсутствует</div>;
-  }
-
-  return <Timeline mode={compact ? 'left' : undefined} items={items as any} />;
+  return <Timeline mode={compact ? 'left' : undefined} items={items} />;
 };
 
 export default PurchaseStatusTimeline;

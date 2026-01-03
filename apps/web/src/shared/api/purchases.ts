@@ -8,6 +8,7 @@ import {
   PurchaseListParams,
   PurchaseUpdateDto,
 } from '../types/Purchase';
+import { authFetch } from '@shared/api/authFetch';
 
 function appendParam(url: URL, key: string, val: unknown) {
   if (val === undefined || val === null || val === '') return;
@@ -17,7 +18,6 @@ function appendParam(url: URL, key: string, val: unknown) {
 export class PurchasesApi {
   private readonly baseUrl: URL;
 
-  // меняем дефолтный slug на 'purchases' (нижний регистр)
   constructor(baseURL: string, slug = 'purchases') {
     // Удаляем ведущие слеши из slug
     const cleanedSlug = slug.replace(/^\/+/, '');
@@ -56,18 +56,18 @@ export class PurchasesApi {
     appendParam(url, 'bankGuaranteeToFrom', params.bankGuaranteeToFrom);
     appendParam(url, 'bankGuaranteeToTo', params.bankGuaranteeToTo);
 
-    const res = await fetch(url.href, { signal, credentials: 'include' });
+    const res = await authFetch(url.href, { signal, credentials: 'include' });
     return checkResponse<Paginated<Purchase>>(res);
   }
 
   async getById(id: string, signal?: AbortSignal) {
     const url = new URL(`${this.baseUrl.href}${id}`);
-    const res = await fetch(url.href, { signal, credentials: 'include' });
+    const res = await authFetch(url.href, { signal, credentials: 'include' });
     return checkResponse<Purchase>(res);
   }
 
   async create(payload: PurchaseCreateDto) {
-    const res = await fetch(this.baseUrl.href, {
+    const res = await authFetch(this.baseUrl.href, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -78,7 +78,7 @@ export class PurchasesApi {
 
   async update(id: string, payload: PurchaseUpdateDto) {
     const url = new URL(`${this.baseUrl.href}${id}`);
-    const res = await fetch(url.href, {
+    const res = await authFetch(url.href, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -88,20 +88,20 @@ export class PurchasesApi {
   }
 
   // Смена статуса
-  async setStatus(id: string, payload: { status: string; comment?: string }) {
+  async setStatus(id: string, status: string, comment?: string) {
     const url = new URL(`${this.baseUrl.href}${id}/status`);
-    const res = await fetch(url.href, {
+    const res = await authFetch(url.href, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ status, comment }),
     });
     return checkResponse<Purchase>(res);
   }
 
   async remove(id: string) {
     const url = new URL(`${this.baseUrl.href}${id}`);
-    const res = await fetch(url.href, {
+    const res = await authFetch(url.href, {
       method: 'DELETE',
       credentials: 'include',
     });
@@ -124,7 +124,7 @@ export class PurchasesApi {
     appendParam(url, 'bankGuaranteeToFrom', params.bankGuaranteeToFrom);
     appendParam(url, 'bankGuaranteeToTo', params.bankGuaranteeToTo);
 
-    const res = await fetch(url.href, { credentials: 'include' });
+    const res = await authFetch(url.href, { credentials: 'include' });
     if (!res.ok) return checkResponse(res);
 
     const blob = await res.blob();
@@ -146,7 +146,7 @@ export class PurchasesApi {
     signal?: AbortSignal
   ) {
     const url = new URL(`${this.baseUrl.href}batch`);
-    const res = await fetch(url.href, {
+    const res = await authFetch(url.href, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

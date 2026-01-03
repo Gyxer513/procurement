@@ -1,15 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Flex, Typography } from 'antd';
+import { CheckboxOptionType, Flex, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { CreatePurchaseModal } from '../../../features/Purchases/create/ui/CreatePurchaseModal';
-import { EditPurchaseModal } from '../../../features/Purchases/edit/ui/EditPurchaseModal';
+import { PurchaseModal } from '@features/Purchases/modal/ui/PurchaseModal';
 import { buildPurchaseColumns } from '@entities/purchase/lib/columns';
-import { ColumnsVisibility } from '../../../widgets/columns-visibility/ui/ColumnsVisibility';
-import { FiltersBar } from '../../../widgets/purchase-filters/ui/FiltersBar';
-import { PurchasesGrid } from '../../../widgets/purchases-table/ui/PurchasesGrid';
-import { hooks } from '../../../entities/purchase/model/hooks';
-import type { Purchase } from '../../../shared/types/Purchase';
-import { PURCHASE_COLUMN_KEYS } from '../../../shared/utils/Constants';
+import { ColumnsVisibility } from '@widgets/columns-visibility/ui/ColumnsVisibility';
+import { FiltersBar } from '@widgets/purchase-filters/ui/FiltersBar';
+import { PurchasesGrid } from '@widgets/purchases-table/ui/PurchasesGrid';
+import { hooks } from '@entities/purchase/model/hooks';
+import type { Purchase } from '@shared/types/Purchase';
 import { useNavigate } from 'react-router-dom';
 const { Text } = Typography;
 
@@ -42,19 +40,31 @@ export function PurchasePage() {
     setEditOpen(false);
     setEditing(null);
   };
-  const openView = (rec: Purchase) => navigate(`/purchases/${rec._id}`);
+  const openView = (rec: Purchase) => navigate(`/purchases/${rec.id}`);
   const allColumns: ColumnsType<Purchase> = useMemo(
-    () => buildPurchaseColumns(openEdit, openView),
+    () => buildPurchaseColumns(openView),
     []
   );
+  const [dateRange, setDateRange] = useState<[string | null, string | null]>([
+    null,
+    null,
+  ]);
+  const [visibleKeys, setVisibleKeys] = useState<string[] | null>(null);
 
-  const [checkedList, setCheckedList] =
-    useState<string[]>(PURCHASE_COLUMN_KEYS);
-
-  const visibleColumns = useMemo(
-    () => allColumns.filter((c) => checkedList.includes(String(c.key))),
-    [allColumns, checkedList]
+  const options: CheckboxOptionType[] = allColumns.map(
+    (c: any, idx: number) => ({
+      label: String(c.title ?? c.key ?? `col_${idx}`),
+      value: String(c.key ?? c.dataIndex ?? `col_${idx}`),
+    })
   );
+
+  const columns: ColumnsType<Purchase> =
+    visibleKeys === null
+      ? allColumns
+      : allColumns.filter((c: any, idx: number) => {
+          const key = String(c.key ?? c.dataIndex ?? `col_${idx}`);
+          return visibleKeys.includes(key);
+        });
 
   return (
     <Flex vertical gap="middle" style={{ width: '100%' }}>
@@ -65,36 +75,33 @@ export function PurchasePage() {
         setCompleted={setCompleted}
         responsible={responsible}
         setResponsible={setResponsible}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
         onApply={applyFilters}
         onReset={resetFilters}
         onExport={handleExport}
         onCreate={() => setCreateOpen(true)}
-      />
-
-      <ColumnsVisibility
-        options={allColumns.map(({ key, title }) => ({
-          label: title as string,
-          value: String(key),
-        }))}
-        checkedList={checkedList}
-        onChange={setCheckedList}
-      />
-
+      >
+        <ColumnsVisibility options={options} onChange={setVisibleKeys} />
+      </FiltersBar>
       <PurchasesGrid
         loading={isLoading}
-        columns={visibleColumns}
+        columns={columns}
         data={data?.items || []}
         pagination={{
           current: query.page,
           pageSize: query.pageSize,
           total: data?.total || 0,
         }}
+        onRow={(record) => ({
+          onDoubleClick: () => openEdit(record),
+        })}
         onChange={(pagination, _filters, sorter) => {
           const s = Array.isArray(sorter) ? sorter[0] : sorter;
           setQuery((q) => ({
             ...q,
-            page: pagination.current || 1,
-            pageSize: pagination.pageSize || 20,
+            page: Number(pagination.current) || 1,
+            pageSize: Number(pagination.pageSize) || 20,
             sortBy: s?.field ? String(s.field) : q.sortBy,
             sortOrder:
               s?.order === 'ascend'
@@ -106,11 +113,8 @@ export function PurchasePage() {
         }}
       />
 
-      <CreatePurchaseModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-      />
-      <EditPurchaseModal
+      <PurchaseModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <PurchaseModal
         open={editOpen}
         onClose={closeEdit}
         purchase={editing || undefined}

@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
   Descriptions,
@@ -10,32 +10,25 @@ import {
   Col,
   Divider,
 } from 'antd';
-import { fmtDate, rub } from '../../../shared/utils/format';
-import { Purchase } from '../../../shared/types/Purchase';
-import { purchasesApi } from '../../../shared/api/purchases';
+import { fmtDate, rub } from '@shared/utils/format';
+import { Purchase } from '@shared/types/Purchase';
+import { purchasesApi } from '@shared/api/purchases';
 import PurchaseStatusTimeline from '../../../widgets/status-timeline/ui/PurchaseStatusTimeline';
+import { STATUS_COLORS } from '@shared/enums/statusColors';
 
-const STATUS_COLORS: Record<string, string> = {
-  'в работе': 'blue',
-  'на рассмотрении': 'gold',
-  'получено отделом закупок': 'geekblue',
-  'на доработку': 'orange',
-  отказано: 'red',
-  аннулировано: 'default',
-};
 const SITE_COLORS: Record<string, string> = {
   Скатертный: 'magenta',
   Ломоносовский: 'purple',
   Вороново: 'green',
 };
 
-export const PurchaseDetailsPage: React.FC = () => {
+export const PurchaseDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [purchase, setPurchase] = React.useState<Purchase | null>(null);
-  const [loading, setLoading] = React.useState(false);
+  const [purchase, setPurchase] = useState<Purchase | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!id) return;
     setLoading(true);
     purchasesApi
@@ -51,16 +44,14 @@ export const PurchaseDetailsPage: React.FC = () => {
       (purchase?.currentContractAmount ?? 0) -
         (purchase?.performanceAmount ?? 0)
     );
-
+  console.log('purchase statusHistory', purchase);
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
       <Space wrap>
         <Button onClick={() => navigate(-1)}>Назад</Button>
         <Button
           type="primary"
-          onClick={() =>
-            purchase && navigate(`/purchases/${purchase._id}/edit`)
-          }
+          onClick={() => purchase && navigate(`/purchases/${purchase.id}/edit`)}
         >
           Редактировать
         </Button>
@@ -281,7 +272,7 @@ export const PurchaseDetailsPage: React.FC = () => {
               <Divider />
 
               <Card size="small" title="История статусов">
-                <PurchaseStatusTimeline history={purchase.statusHistory} />
+                <PurchaseStatusTimeline history={purchase._statusHistory} />
               </Card>
             </Col>
           </Row>

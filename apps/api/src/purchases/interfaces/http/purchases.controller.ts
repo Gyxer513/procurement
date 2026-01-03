@@ -10,31 +10,38 @@ import {
   Res,
   HttpCode,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { PurchasesService } from '../../application/services/purchases.service';
 import { Purchase } from '../../domain/entities/purchase.entity';
 import { ListPurchasesDto } from '../../application/dto/list-purchases.dto';
 import { SetStatusDto } from '../../application/dto/set-status.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Roles, RolesGuard } from '../../../auth/roles.guard';
+import { BatchResult } from '../../domain/entities/BatchResult.type';
+import { Role } from '../../../auth/roles';
 
-type BatchResult = {
-  inserted?: number;
-  upserted?: number;
-  modified?: number;
-  matched?: number;
-};
-
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('purchases')
 export class PurchasesController {
   constructor(private readonly service: PurchasesService) {}
 
-  // Список с пагинацией/поиском/сортировкой
+  // Просмотр списка: всем ролям (инициатор потом будет фильтроваться "только своё")
+  @Roles(
+    Role.SeniorAdmin,
+    Role.Admin,
+    Role.Procurement,
+    Role.Initiator,
+    Role.Statistic
+  )
   @Get()
   async list(@Query() query: ListPurchasesDto) {
     return this.service.list(query);
   }
 
-  // Экспорт в Excel
+  // Экспорт: обычно только статист/закупки/админы
+  @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement, Role.Statistic)
   @Get('export')
   async export(@Query() query: ListPurchasesDto, @Res() res: Response) {
     const { buffer, filename } = await this.service.export(query);
@@ -51,19 +58,28 @@ export class PurchasesController {
     return res.end(buffer);
   }
 
-  // Получение одной закупки
+  // Просмотр одной: всем ролям (инициатор позже будет проверяться на "свою")
+  @Roles(
+    Role.SeniorAdmin,
+    Role.Admin,
+    Role.Procurement,
+    Role.Initiator,
+    Role.Statistic
+  )
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Purchase> {
     return this.service.findOne(id);
   }
 
-  // Создание закупки
+  // Создание: закупки/инициатор/админы
+  @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement, Role.Initiator)
   @Post()
   async create(@Body() dto: Partial<Purchase>): Promise<Purchase> {
     return this.service.create(dto);
   }
 
-  // Обновление закупки
+  // Обновление: закупки/инициатор/админы (ограничение "инициатор только своё" позже)
+  @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement, Role.Initiator)
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -72,7 +88,8 @@ export class PurchasesController {
     return this.service.update(id, dto);
   }
 
-  // Смена статуса
+  // Смена статуса: обычно только закупки/админы (инициатору не даём)
+  @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement)
   @Patch(':id/status')
   @HttpCode(200)
   async setStatus(
@@ -82,14 +99,16 @@ export class PurchasesController {
     return this.service.setStatus(id, dto.status, dto.comment);
   }
 
-  // Удаление закупки
+  // Удаление: админы
+  @Roles(Role.SeniorAdmin, Role.Admin)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.service.remove(id);
     return { deleted: true };
   }
 
-  // Batch-операции
+  // Batch: только senior_admin (как было)
+  @Roles(Role.SeniorAdmin)
   @Post('batch')
   @HttpCode(200)
   async batch(
@@ -107,8 +126,6 @@ export class PurchasesController {
     const mode = body.mode ?? 'upsert';
     if (mode === 'insert') {
       throw new BadRequestException('Insert mode is not supported yet');
-      // Если захочешь добавить batchInsert, раскомментируй и реализуй в сервисе
-      // return this.service.batchInsert(body.items);
     }
 
     return this.service.batchUpsert(body.items, {

@@ -37,7 +37,6 @@ export class ListPurchasesUseCase {
     return { items, total };
   }
 
-  // ... buildFilter остаётся как есть
   private buildFilter(dto: ListPurchasesDto): any {
     const filter: any = {};
     const or: any[] = [];
