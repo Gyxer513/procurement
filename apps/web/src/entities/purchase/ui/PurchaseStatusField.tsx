@@ -42,7 +42,6 @@ export function PurchaseStatusField({
           }))}
           onChange={handleChange}
           disabled={disabled || loading}
-          dropdownMatchSelectWidth={false}
         />
       </Spin>
     </Form.Item>

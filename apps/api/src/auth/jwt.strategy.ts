@@ -8,7 +8,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor() {
     const issuer = process.env.KEYCLOAK_ISSUER!;
     const jwksUri =
-      process.env.KEYCLOAK_JWKS_URI ?? `${issuer}/protocol/openid-connect/certs`;
+      process.env.KEYCLOAK_JWKS_URI ??
+      `${issuer}/protocol/openid-connect/certs`;
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -28,6 +29,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   validate(payload: any) {
-    return payload;
+    const realmRoles = payload?.realm_access?.roles ?? [];
+    const clientRoles =
+      payload?.resource_access?.[process.env.KEYCLOAK_CLIENT_ID!]?.roles ?? [];
+
+    return {
+      sub: payload.sub,
+      username: payload.preferred_username,
+      email: payload.email,
+      roles: [...new Set([...realmRoles, ...clientRoles])],
+      raw: payload,
+    };
   }
 }
