@@ -4,12 +4,15 @@ import {
   type RouterProviderProps,
   Navigate,
 } from 'react-router-dom';
-
-import { PurchasePage } from '@pages/purchases/ui/PurchasePage';
 import { MainPage } from '@pages/main/ui/MainPage';
+import { PurchasePage } from '@pages/purchases/ui/PurchasePage';
 import PurchaseDetailsPage from '@pages/purchase-details/ui/PurchaseDetailsPage';
 import AdminPage from '@pages/admin/ui/AdminPage';
 import ReportsPage from '@pages/reports/ui/ReportsPage';
+import NotFoundPage from '@pages/not-found/ui/NotFoundPage';
+import ForbiddenPage from '@pages/forbidden/ui/ForbiddenPage';
+import AppErrorPage from '@pages/app-error/ui/AppErrorPage';
+
 import { RequireRealmRole } from './RequireRealmRole';
 
 type AppRouter = RouterProviderProps['router'];
@@ -18,8 +21,8 @@ export const routes: RouteObject[] = [
   {
     path: '/',
     element: <MainPage />,
+    errorElement: <AppErrorPage />,
     children: [
-      // вот это и убирает "пустую" главную:
       { index: true, element: <Navigate to="purchases" replace /> },
 
       { path: 'purchases', element: <PurchasePage /> },
@@ -27,7 +30,8 @@ export const routes: RouteObject[] = [
 
       { path: 'reports', element: <ReportsPage /> },
 
-      // админку закрываем ролью (пример)
+      { path: 'forbidden', element: <ForbiddenPage /> },
+
       {
         path: 'admin',
         element: (
@@ -36,6 +40,8 @@ export const routes: RouteObject[] = [
           </RequireRealmRole>
         ),
       },
+
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ];
