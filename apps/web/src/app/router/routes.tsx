@@ -4,15 +4,14 @@ import {
   type RouterProviderProps,
   Navigate,
 } from 'react-router-dom';
+
 import { MainPage } from '@pages/main/ui/MainPage';
 import { PurchasePage } from '@pages/purchases/ui/PurchasePage';
 import PurchaseDetailsPage from '@pages/purchase-details/ui/PurchaseDetailsPage';
 import AdminPage from '@pages/admin/ui/AdminPage';
 import ReportsPage from '@pages/reports/ui/ReportsPage';
-import NotFoundPage from '@pages/not-found/ui/NotFoundPage';
-import ForbiddenPage from '@pages/forbidden/ui/ForbiddenPage';
-import AppErrorPage from '@pages/app-error/ui/AppErrorPage';
 
+import ErrorPage from '@pages/error/ui/ErrorPage';
 import { RequireRealmRole } from './RequireRealmRole';
 
 type AppRouter = RouterProviderProps['router'];
@@ -21,7 +20,7 @@ export const routes: RouteObject[] = [
   {
     path: '/',
     element: <MainPage />,
-    errorElement: <AppErrorPage />,
+    errorElement: <ErrorPage />, // ошибки data router (loader/action/throw)
     children: [
       { index: true, element: <Navigate to="purchases" replace /> },
 
@@ -30,7 +29,8 @@ export const routes: RouteObject[] = [
 
       { path: 'reports', element: <ReportsPage /> },
 
-      { path: 'forbidden', element: <ForbiddenPage /> },
+      // единая страница ошибок по коду
+      { path: 'error/:code?', element: <ErrorPage /> },
 
       {
         path: 'admin',
@@ -41,7 +41,8 @@ export const routes: RouteObject[] = [
         ),
       },
 
-      { path: '*', element: <NotFoundPage /> },
+      // любой неизвестный путь -> /error/404
+      { path: '*', element: <Navigate to="/error/404" replace /> },
     ],
   },
 ];

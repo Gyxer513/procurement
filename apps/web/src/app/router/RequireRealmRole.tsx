@@ -1,12 +1,13 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { keycloak } from '@/auth/keycloak';
+import { ReactNode } from 'react';
 
 export function RequireRealmRole({
   role,
   children,
 }: {
   role: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const location = useLocation();
   const hasRole = keycloak.hasRealmRole?.(role);
@@ -14,6 +15,6 @@ export function RequireRealmRole({
   if (hasRole) return <>{children}</>;
 
   return (
-    <Navigate to="/forbidden" replace state={{ from: location.pathname }} />
+    <Navigate to="/error/403" replace state={{ from: location.pathname }} />
   );
 }
