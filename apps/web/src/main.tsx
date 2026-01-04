@@ -1,17 +1,53 @@
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConfigProvider } from 'antd';
-import ruRU from 'antd/locale/ru_RU';
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
 import 'antd/dist/reset.css';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
 import { App } from '@app/App';
 import { StrictMode } from 'react';
 import { keycloak } from './auth/keycloak';
+import { ThemeProvider } from '@/app/providers/theme/ThemeProvider';
+import { getHttpStatus } from '@/lib/http/getHttpStatus';
+import { router } from '@app/router/routes';
 
 dayjs.locale('ru');
 
-const queryClient = new QueryClient();
+function goToServerError(status: number) {
+  if (status !== 500 && status !== 502) return;
+
+  const currentPath = router.state.location.pathname;
+  if (currentPath.startsWith('/error')) return; // анти-зацикливание
+
+  router.navigate(`/error/${status}`);
+}
+
+export const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      const status = getHttpStatus(error);
+      if (!status) return;
+      goToServerError(status);
+    },
+  }),
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      const status = getHttpStatus(error);
+      if (!status) return;
+      goToServerError(status);
+    },
+  }),
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      // тут onError уже нельзя в v5 — только retry/ staleTime / gcTime и т.д.
+    },
+  },
+});
 
 async function bootstrap() {
   await keycloak.init({
@@ -19,18 +55,18 @@ async function bootstrap() {
     pkceMethod: 'S256',
     checkLoginIframe: false,
   });
+
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <ConfigProvider locale={ruRU}>
+        <ThemeProvider>
           <App />
-        </ConfigProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </StrictMode>
   );
 }
 
 bootstrap().catch((e) => {
-  // можно вывести на страницу/в консоль
   console.error('Keycloak init failed', e);
 });

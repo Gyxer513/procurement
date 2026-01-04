@@ -1,11 +1,19 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { Purchase } from '../../domain/entities/purchase.entity';
+import { Inject, Injectable } from '@nestjs/common';
 import { IPurchaseRepository } from '../../domain/interfaces/purchase.repository.interface';
 import { ListPurchasesDto } from '../dto/list-purchases.dto';
+import { PurchaseStatus } from '../../domain';
 
-interface ListResult {
-  items: Purchase[];
-  total: number;
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function startOfDay(d: string) {
+  // date-only 'YYYY-MM-DD' -> Date at 00:00:00
+  return new Date(`${d}T00:00:00.000Z`);
+}
+function endOfDay(d: string) {
+  // inclusive end of day
+  return new Date(`${d}T23:59:59.999Z`);
 }
 
 @Injectable()
@@ -15,56 +23,97 @@ export class ListPurchasesUseCase {
     private readonly purchaseRepo: IPurchaseRepository
   ) {}
 
-  async execute(dto: ListPurchasesDto): Promise<ListResult> {
-    const page = dto.page ?? 1;
-    const pageSize = dto.pageSize ?? 20;
+  async execute(dto: ListPurchasesDto) {
+    const page = Math.max(1, Number(dto.page ?? 1));
+    const pageSize = Math.max(1, Math.min(200, Number(dto.pageSize ?? 20)));
+    const skip = (page - 1) * pageSize;
 
-    const filter = this.buildFilter(dto);
+    // сортировка
+    const sortBy = dto.sortBy ?? 'createdAt';
+    const sortOrder = dto.sortOrder === 'asc' ? 1 : -1;
+    const sort = { [sortBy]: sortOrder } as Record<string, 1 | -1>;
 
-    const sort: Record<string, 1 | -1> = dto.sortBy
-      ? { [dto.sortBy]: dto.sortOrder === 'asc' ? 1 : -1 }
-      : { createdAt: -1 };
+    // БАЗОВО: удалённые не показываем
+    const filter: any = { status: { $ne: PurchaseStatus.Deleted } };
+
+    // Если явно запросили Deleted в общем списке — отдаём пусто
+    if (dto.status === PurchaseStatus.Deleted) {
+      return { items: [], total: 0, page, pageSize };
+    }
+
+    // Статус (кроме Deleted)
+    if (dto.status) filter.status = dto.status;
+
+    // site
+    if (dto.site) filter.site = dto.site;
+
+    // completed
+    if (typeof dto.completed === 'boolean') filter.completed = dto.completed;
+
+    // responsible
+    if (dto.responsible) filter.responsible = dto.responsible;
+
+    // q (по набору полей)
+    if (dto.q?.trim()) {
+      const rx = new RegExp(escapeRegExp(dto.q.trim()), 'i');
+      filter.$or = [
+        { entryNumber: rx },
+        { contractSubject: rx },
+        { supplierName: rx },
+        { supplierInn: rx },
+        { contractNumber: rx },
+        { documentNumber: rx },
+        { responsible: rx },
+        { publication: rx },
+        { planNumber: rx },
+      ];
+    }
+
+    // lastStatusChangedAt range
+    if (dto.lastStatusChangedFrom || dto.lastStatusChangedTo) {
+      filter.lastStatusChangedAt = {};
+      if (dto.lastStatusChangedFrom)
+        filter.lastStatusChangedAt.$gte = new Date(dto.lastStatusChangedFrom);
+      if (dto.lastStatusChangedTo)
+        filter.lastStatusChangedAt.$lte = new Date(dto.lastStatusChangedTo);
+    }
+
+    // bankGuaranteeValidFrom range
+    if (dto.bankGuaranteeFromFrom || dto.bankGuaranteeFromTo) {
+      filter.bankGuaranteeValidFrom = {};
+      if (dto.bankGuaranteeFromFrom)
+        filter.bankGuaranteeValidFrom.$gte = new Date(
+          dto.bankGuaranteeFromFrom
+        );
+      if (dto.bankGuaranteeFromTo)
+        filter.bankGuaranteeValidFrom.$lte = new Date(dto.bankGuaranteeFromTo);
+    }
+
+    // bankGuaranteeValidTo range
+    if (dto.bankGuaranteeToFrom || dto.bankGuaranteeToTo) {
+      filter.bankGuaranteeValidTo = {};
+      if (dto.bankGuaranteeToFrom)
+        filter.bankGuaranteeValidTo.$gte = new Date(dto.bankGuaranteeToFrom);
+      if (dto.bankGuaranteeToTo)
+        filter.bankGuaranteeValidTo.$lte = new Date(dto.bankGuaranteeToTo);
+    }
+
+    // year / dateFrom / dateTo — фильтруем по contractDate (можешь заменить поле)
+    if (dto.year) {
+      const from = new Date(`${dto.year}-01-01T00:00:00.000Z`);
+      const to = new Date(`${dto.year}-12-31T23:59:59.999Z`);
+      filter.contractDate = { $gte: from, $lte: to };
+    } else if (dto.dateFrom || dto.dateTo) {
+      filter.contractDate = {};
+      if (dto.dateFrom) filter.contractDate.$gte = startOfDay(dto.dateFrom);
+      if (dto.dateTo) filter.contractDate.$lte = endOfDay(dto.dateTo);
+    }
 
     const [items, total] = await Promise.all([
-      this.purchaseRepo.findAll(filter, {
-        skip: (page - 1) * pageSize,
-        limit: pageSize,
-        sort,
-      }),
+      this.purchaseRepo.findAll(filter, { skip, limit: pageSize, sort }),
       this.purchaseRepo.count(filter),
     ]);
 
-    return { items, total };
-  }
-
-  private buildFilter(dto: ListPurchasesDto): any {
-    const filter: any = {};
-    const or: any[] = [];
-
-    if (dto.q) {
-      const rx = new RegExp(dto.q.trim(), 'i');
-      or.push(
-        { supplierName: rx },
-        { contractSubject: rx },
-        { contractNumber: rx },
-        { entryNumber: rx },
-        { supplierInn: rx },
-        { methodOfPurchase: rx },
-        { documentNumber: rx },
-        { planNumber: rx },
-        { publication: rx },
-        { responsible: rx },
-        { comment: rx }
-      );
-    }
-
-    if (or.length) filter.$or = or;
-    if (dto.completed !== undefined) filter.completed = dto.completed;
-    if (dto.responsible)
-      filter.responsible = new RegExp(dto.responsible.trim(), 'i');
-    if (dto.status) filter.status = dto.status;
-    if (dto.site) filter.site = dto.site;
-
-    return filter;
+    return { items, total, page, pageSize };
   }
 }

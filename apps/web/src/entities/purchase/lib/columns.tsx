@@ -5,8 +5,8 @@ import { fmtDate, rub } from '@shared/utils/format';
 import { STATUS_COLORS } from '@shared/enums/statusColors';
 
 const SITE_COLORS: Record<string, string> = {
-  Скатертный: 'magenta',
-  Ломоносовский: 'purple',
+  Скатертный: 'blue',
+  Ломоносовский: 'red',
   Вороново: 'green',
 };
 

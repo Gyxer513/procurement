@@ -1,10 +1,13 @@
 import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsDateString,
   IsEnum,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
+  Min,
 } from 'class-validator';
 import { PurchaseSite, PurchaseStatus } from '../../domain';
 
@@ -34,4 +37,18 @@ export class ListPurchasesDto {
   @IsOptional() @IsString() bankGuaranteeFromTo?: string;
   @IsOptional() @IsString() bankGuaranteeToFrom?: string;
   @IsOptional() @IsString() bankGuaranteeToTo?: string;
+  @IsOptional()
+  @Transform(({ value }) => (value !== undefined ? Number(value) : undefined))
+  @IsInt()
+  @Min(2025)
+  year?: number;
+
+  // '2025-01-01' — валидный ISO8601 date-only, IsDateString пропускает
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string; // YYYY-MM-DD
+
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string; // YYYY-MM-DD
 }

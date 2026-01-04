@@ -13,7 +13,7 @@ import {
   INCLUDES_ALL,
   NUMBER_FIELDS,
   STARTS_WITH,
-} from '@/config/exelRules';
+} from '@shared/config/exelRules';
 import { read, utils } from 'xlsx';
 
 // Процессоры по полям
