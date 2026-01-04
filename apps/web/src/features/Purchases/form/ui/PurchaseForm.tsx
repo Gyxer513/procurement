@@ -91,7 +91,6 @@ export function PurchaseForm({
   // - ReadOnly: всё disabled (но рисуем для просмотра)
   const disableEntryDate = true;
   const disableEntryNumber = readOnly || isProc; // procurement не меняет номер
-  console.log('form:', form);
   return (
     <Form form={form} layout="vertical">
       {isAdminCreate && (

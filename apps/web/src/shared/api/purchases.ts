@@ -56,6 +56,10 @@ export class PurchasesApi {
     appendParam(url, 'bankGuaranteeToFrom', params.bankGuaranteeToFrom);
     appendParam(url, 'bankGuaranteeToTo', params.bankGuaranteeToTo);
 
+    appendParam(url, 'year', params.year);
+    appendParam(url, 'dateFrom', params.dateFrom);
+    appendParam(url, 'dateTo', params.dateTo);
+
     const res = await authFetch(url.href, { signal, credentials: 'include' });
     return checkResponse<Paginated<Purchase>>(res);
   }
@@ -123,6 +127,9 @@ export class PurchasesApi {
     appendParam(url, 'bankGuaranteeFromTo', params.bankGuaranteeFromTo);
     appendParam(url, 'bankGuaranteeToFrom', params.bankGuaranteeToFrom);
     appendParam(url, 'bankGuaranteeToTo', params.bankGuaranteeToTo);
+    appendParam(url, 'year', params.year);
+    appendParam(url, 'dateFrom', params.dateFrom);
+    appendParam(url, 'dateTo', params.dateTo);
 
     const res = await authFetch(url.href, { credentials: 'include' });
     if (!res.ok) return checkResponse(res);

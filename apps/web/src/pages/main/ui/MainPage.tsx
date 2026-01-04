@@ -8,7 +8,6 @@ export function MainPage() {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <AppHeader />
-
       <Content style={{ padding: 16 }}>
         <Outlet />
       </Content>

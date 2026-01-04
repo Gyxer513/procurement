@@ -4,30 +4,57 @@ import type { ColumnsType } from 'antd/es/table';
 import { PurchaseModal } from '@features/Purchases/modal/ui/PurchaseModal';
 import { buildPurchaseColumns } from '@entities/purchase/lib/columns';
 import { ColumnsVisibility } from '@widgets/columns-visibility/ui/ColumnsVisibility';
-import { FiltersBar } from '@widgets/purchase-filters/ui/FiltersBar';
 import { PurchasesGrid } from '@widgets/purchases-table/ui/PurchasesGrid';
-import { hooks } from '@entities/purchase/model/hooks';
 import type { Purchase } from '@shared/types/Purchase';
 import { useNavigate } from 'react-router-dom';
+
+import { usePurchasesList } from '@/entities/purchase/model';
+import {
+  PurchasesFiltersBar,
+  usePurchasesFilters,
+} from '@/features/Purchases/filters';
+import { usePurchasesExport } from '@/features/Purchases/export';
+
 const { Text } = Typography;
 
 export function PurchasePage() {
-  const {
-    query,
-    setQuery,
-    data,
-    isLoading,
-    applyFilters,
-    resetFilters,
-    handleExport,
-    search,
-    setSearch,
-    completed,
-    setCompleted,
-    responsible,
-    setResponsible,
-  } = hooks();
   const navigate = useNavigate();
+
+  const { query, setQuery, data, isLoading } = usePurchasesList();
+  const {
+    filters,
+    setSearch,
+    setCompleted,
+    setResponsible,
+    setYear,
+    setDateRange,
+    buildQueryPatch,
+    resetUi,
+  } = usePurchasesFilters();
+  const { exportPurchases } = usePurchasesExport();
+
+  const applyFilters = () => {
+    setQuery((q) => ({
+      ...q,
+      page: 1,
+      ...buildQueryPatch(),
+    }));
+  };
+
+  const resetFilters = () => {
+    resetUi();
+    setQuery((q) => ({
+      ...q,
+      page: 1,
+      q: undefined,
+      completed: undefined,
+      responsible: undefined,
+      year: undefined,
+      dateFrom: undefined,
+      dateTo: undefined,
+    }));
+  };
+
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<Purchase | null>(null);
@@ -41,14 +68,12 @@ export function PurchasePage() {
     setEditing(null);
   };
   const openView = (rec: Purchase) => navigate(`/purchases/${rec.id}`);
+
   const allColumns: ColumnsType<Purchase> = useMemo(
     () => buildPurchaseColumns(openView),
     []
   );
-  const [dateRange, setDateRange] = useState<[string | null, string | null]>([
-    null,
-    null,
-  ]);
+
   const [visibleKeys, setVisibleKeys] = useState<string[] | null>(null);
 
   const options: CheckboxOptionType[] = allColumns.map(
@@ -68,22 +93,25 @@ export function PurchasePage() {
 
   return (
     <Flex vertical gap="middle" style={{ width: '100%' }}>
-      <FiltersBar
-        search={search}
+      <PurchasesFiltersBar
+        search={filters.search}
         setSearch={setSearch}
-        completed={completed}
+        completed={filters.completed}
         setCompleted={setCompleted}
-        responsible={responsible}
+        responsible={filters.responsible}
         setResponsible={setResponsible}
-        dateRange={dateRange}
+        year={filters.year}
+        setYear={setYear}
+        dateRange={filters.dateRange}
         setDateRange={setDateRange}
         onApply={applyFilters}
         onReset={resetFilters}
-        onExport={handleExport}
+        onExport={() => exportPurchases(query)}
         onCreate={() => setCreateOpen(true)}
       >
         <ColumnsVisibility options={options} onChange={setVisibleKeys} />
-      </FiltersBar>
+      </PurchasesFiltersBar>
+
       <PurchasesGrid
         loading={isLoading}
         columns={columns}

@@ -17,8 +17,8 @@ import PurchaseStatusTimeline from '../../../widgets/status-timeline/ui/Purchase
 import { STATUS_COLORS } from '@shared/enums/statusColors';
 
 const SITE_COLORS: Record<string, string> = {
-  Скатертный: 'magenta',
-  Ломоносовский: 'purple',
+  Скатертный: 'blue',
+  Ломоносовский: 'red',
   Вороново: 'green',
 };
 
@@ -44,7 +44,6 @@ export const PurchaseDetailsPage = () => {
       (purchase?.currentContractAmount ?? 0) -
         (purchase?.performanceAmount ?? 0)
     );
-  console.log('purchase statusHistory', purchase);
   return (
     <Space orientation="vertical" size="large" style={{ width: '100%' }}>
       <Space wrap>

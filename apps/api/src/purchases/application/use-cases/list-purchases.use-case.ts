@@ -65,6 +65,42 @@ export class ListPurchasesUseCase {
     if (dto.status) filter.status = dto.status;
     if (dto.site) filter.site = dto.site;
 
+    // === ДОБАВИТЬ: период/год ===
+    const range = this.buildDateRange(dto);
+    if (range) {
+      // Фильтруем по createdAt (или замени на нужное поле)
+      filter.createdAt = range;
+    }
+
     return filter;
+  }
+
+  // range для Mongo: { $gte: Date, $lte: Date }
+  private buildDateRange(
+    dto: ListPurchasesDto
+  ): { $gte?: Date; $lte?: Date } | null {
+    let from = dto.dateFrom ?? null;
+    let to = dto.dateTo ?? null;
+
+    // Если пришёл year и не пришли dateFrom/dateTo — разворачиваем год в диапазон
+    if (from === null && to === null && dto.year) {
+      from = `${dto.year}-01-01`;
+      to = `${dto.year}-12-31`;
+    }
+
+    if (!from && !to) return null;
+
+    const range: { $gte?: Date; $lte?: Date } = {};
+
+    if (from) {
+      // начало дня UTC
+      range.$gte = new Date(`${from}T00:00:00.000Z`);
+    }
+    if (to) {
+      // конец дня UTC (включительно)
+      range.$lte = new Date(`${to}T23:59:59.999Z`);
+    }
+
+    return range;
   }
 }

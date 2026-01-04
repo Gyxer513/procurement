@@ -51,9 +51,15 @@ export type PurchaseListParams = {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+
   q?: string;
   completed?: boolean;
   responsible?: string;
+
+  year?: number;
+  dateFrom?: string; // 'YYYY-MM-DD'
+  dateTo?: string; // 'YYYY-MM-DD'
+
   status?: string;
   site?: string;
   lastStatusChangedFrom?: string;
