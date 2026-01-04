@@ -1,13 +1,12 @@
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ConfigProvider } from 'antd';
-import ruRU from 'antd/locale/ru_RU';
 import 'antd/dist/reset.css';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
 import { App } from '@app/App';
 import { StrictMode } from 'react';
 import { keycloak } from './auth/keycloak';
+import { ThemeProvider } from '@/app/providers/theme/ThemeProvider';
 
 dayjs.locale('ru');
 
@@ -19,18 +18,18 @@ async function bootstrap() {
     pkceMethod: 'S256',
     checkLoginIframe: false,
   });
+
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <ConfigProvider locale={ruRU}>
+        <ThemeProvider>
           <App />
-        </ConfigProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </StrictMode>
   );
 }
 
 bootstrap().catch((e) => {
-  // можно вывести на страницу/в консоль
   console.error('Keycloak init failed', e);
 });
