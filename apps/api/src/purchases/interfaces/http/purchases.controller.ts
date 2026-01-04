@@ -88,6 +88,12 @@ export class PurchasesController {
     return this.service.update(id, dto);
   }
 
+  @Roles(Role.SeniorAdmin)
+  @Get('deleted')
+  listDeleted(@Query() dto: any) {
+    return this.service.listDeleted(dto);
+  }
+
   // Смена статуса: обычно только закупки/админы (инициатору не даём)
   @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement)
   @Patch(':id/status')
@@ -100,14 +106,14 @@ export class PurchasesController {
   }
 
   // Удаление: админы
-  @Roles(Role.SeniorAdmin, Role.Admin)
+  @Roles(Role.SeniorAdmin)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.service.remove(id);
     return { deleted: true };
   }
 
-  // Batch: только senior_admin (как было)
+  // Batch: только senior_admin
   @Roles(Role.SeniorAdmin)
   @Post('batch')
   @HttpCode(200)

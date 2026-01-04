@@ -9,7 +9,6 @@ type KCProfile = {
 
 export function useCurrentUser() {
   const tokenParsed = keycloak.tokenParsed as any;
-
   const [profile, setProfile] = useState<KCProfile | null>(null);
 
   useEffect(() => {
@@ -30,9 +29,7 @@ export function useCurrentUser() {
           username: p.username,
         });
       })
-      .catch(() => {
-        // fallback останется из tokenParsed
-      });
+      .catch(() => {});
 
     return () => {
       cancelled = true;
@@ -64,11 +61,28 @@ export function useCurrentUser() {
     tokenParsed?.given_name,
   ]);
 
-  const hasRealmRole = (role: string) => Boolean(keycloak.hasRealmRole?.(role));
+  // Универсальная проверка: realm-role ИЛИ client-role (по всем client'ам)
+  const hasRole = (role: string) => {
+    // 1) Realm roles
+    if (keycloak.hasRealmRole?.(role)) return true;
+
+    // 2) Client roles (если знаем clientId)
+    const clientId = (keycloak as any).clientId as string | undefined;
+    if (clientId && keycloak.hasResourceRole?.(role, clientId)) return true;
+
+    // 3) Fallback: пробегаемся по resource_access в tokenParsed
+    const ra = tokenParsed?.resource_access ?? {};
+    for (const client of Object.keys(ra)) {
+      const roles: string[] = ra?.[client]?.roles ?? [];
+      if (roles.includes(role)) return true;
+    }
+
+    return false;
+  };
 
   return {
     login,
-    fullName, // может быть пустой строкой
-    hasRealmRole,
+    fullName,
+    hasRole,
   };
 }

@@ -4,7 +4,6 @@ import { useCurrentUser } from '@entities/user/model/useCurrentUser';
 import { ThemeToggle } from '@features/theme/toggle';
 import { LogoutButton } from '@features/logout';
 
-
 const { Header } = Layout;
 
 export function AppHeader() {
@@ -12,15 +11,14 @@ export function AppHeader() {
   const location = useLocation();
   const { token } = theme.useToken();
 
-  const { login, fullName, hasRealmRole } = useCurrentUser();
-  const isAdmin = hasRealmRole('admin');
-
+  const { login, fullName, hasRole } = useCurrentUser();
+  const isSeniorAdmin = hasRole('senior_admin');
   const selectedKey = location.pathname.split('/')[1] || 'purchases';
 
   const items = [
     { key: 'purchases', label: 'Закупки' },
     { key: 'reports', label: 'Отчеты' },
-    ...(isAdmin ? [{ key: 'admin', label: 'Админ' }] : []),
+    ...(isSeniorAdmin ? [{ key: 'admin', label: 'Админ панель' }] : []),
   ];
 
   return (

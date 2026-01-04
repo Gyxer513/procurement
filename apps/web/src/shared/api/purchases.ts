@@ -109,7 +109,13 @@ export class PurchasesApi {
       method: 'DELETE',
       credentials: 'include',
     });
+
+    if (res.status === 204) return { deleted: true };
     return checkResponse<{ deleted: boolean }>(res);
+  }
+
+  async delete(id: string) {
+    return this.remove(id);
   }
 
   // Экспорт в Excel — с теми же фильтрами, что и list

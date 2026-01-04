@@ -1,18 +1,25 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { keycloak } from '@/auth/keycloak';
 import { ReactNode } from 'react';
+import { keycloak } from '@/auth/keycloak';
 
-export function RequireRealmRole({
-  role,
-  children,
-}: {
+type Props = {
   role: string;
   children: ReactNode;
-}) {
-  const location = useLocation();
-  const hasRole = keycloak.hasRealmRole?.(role);
+  /** Если не передать — возьмем keycloak.clientId */
+  clientId?: string;
+};
 
-  if (hasRole) return <>{children}</>;
+export function RequireClientRole({ role, children, clientId }: Props) {
+  const location = useLocation();
+
+  const effectiveClientId =
+    clientId || ((keycloak as any).clientId as string | undefined);
+
+  const allowed = effectiveClientId
+    ? Boolean(keycloak.hasResourceRole?.(role, effectiveClientId))
+    : false;
+
+  if (allowed) return <>{children}</>;
 
   return (
     <Navigate to="/error/403" replace state={{ from: location.pathname }} />

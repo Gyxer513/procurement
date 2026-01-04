@@ -12,7 +12,7 @@ import AdminPage from '@pages/admin/ui/AdminPage';
 import ReportsPage from '@pages/reports/ui/ReportsPage';
 
 import ErrorPage from '@pages/error/ui/ErrorPage';
-import { RequireRealmRole } from './RequireRealmRole';
+import { RequireClientRole } from './RequireRealmRole';
 
 type AppRouter = RouterProviderProps['router'];
 
@@ -20,7 +20,7 @@ export const routes: RouteObject[] = [
   {
     path: '/',
     element: <MainPage />,
-    errorElement: <ErrorPage />, // ошибки data router (loader/action/throw)
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <Navigate to="purchases" replace /> },
 
@@ -35,9 +35,9 @@ export const routes: RouteObject[] = [
       {
         path: 'admin',
         element: (
-          <RequireRealmRole role="admin">
+          <RequireClientRole role="senior_admin" clientId="procurement-web">
             <AdminPage />
-          </RequireRealmRole>
+          </RequireClientRole>
         ),
       },
 
