@@ -23,22 +23,26 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 10,
-        jwksUri, // <-- вот это важно
+        jwksUri,
       }),
     });
   }
 
   validate(payload: any) {
-    const realmRoles = payload?.realm_access?.roles ?? [];
-    const clientRoles =
-      payload?.resource_access?.[process.env.KEYCLOAK_CLIENT_ID!]?.roles ?? [];
+    const realmRoles: string[] = payload?.realm_access?.roles ?? [];
+
+    const apiClient = process.env.KEYCLOAK_API_CLIENT_ID ?? 'procurement-api';
+    const webClient = process.env.KEYCLOAK_WEB_CLIENT_ID ?? 'procurement-web';
+
+    const apiRoles: string[] =
+      payload?.resource_access?.[apiClient]?.roles ?? [];
+    const webRoles: string[] =
+      payload?.resource_access?.[webClient]?.roles ?? [];
 
     return {
+      ...payload, // если тебе где-то нужен raw payload как раньше
       sub: payload.sub,
-      username: payload.preferred_username,
-      email: payload.email,
-      roles: [...new Set([...realmRoles, ...clientRoles])],
-      raw: payload,
+      roles: [...new Set([...realmRoles, ...apiRoles, ...webRoles])], // <- главное
     };
   }
 }

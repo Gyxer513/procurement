@@ -42,18 +42,9 @@ services:
 
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
+      # опционально (часто помогает, когда бэкенд/фронт ходят по localhost)
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
     command: ["start-dev"]
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    container_name: procurement-web
-    restart: always
-    depends_on:
-      - api
-    ports:
-      - "4200:80"
 
   api:
     build:
@@ -67,18 +58,38 @@ services:
     ports:
       - "3000:3000"
     environment:
-      PORT: 3000
+      PORT: "3000"
 
-      # Mongo внутри docker-сети (authSource=admin важно для root)
-      MONGO_URI: mongodb://root:example@mongodb:27017/procurement?authSource=admin
+      # Mongo внутри docker-сети
+      MONGO_URI: "mongodb://root:example@mongodb:27017/procurement?authSource=admin"
 
-      # Issuer должен совпадать с iss в токене (браузер получает токен с localhost)
-      KEYCLOAK_ISSUER: http://localhost:8080/realms/procurement
+      # ВАЖНО: issuer должен совпадать с iss в токене (браузер получает токен с localhost)
+      KEYCLOAK_ISSUER: "http://localhost:8080/realms/procurement"
 
-      # А ключи берём по внутреннему адресу контейнера
-      KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/procurement/protocol/openid-connect/certs
+      # ВАЖНО: для server-to-server запросов из контейнера используем имя сервиса keycloak
+      KEYCLOAK_ADMIN_BASE_URL: "http://keycloak:8080"
+      KEYCLOAK_JWKS_URI: "http://keycloak:8080/realms/procurement/protocol/openid-connect/certs"
 
-      KEYCLOAK_CLIENT_ID: procurement-api
+      KEYCLOAK_ADMIN_CLIENT_ID: "procurement-admin-service"
+      KEYCLOAK_ADMIN_CLIENT_SECRET: "W6DEMHvRlr7y0U18XjNgN0JASM8MGpvf"
+
+      # откуда читаем client roles для списков пользователей
+      KEYCLOAK_ROLES_SOURCE_CLIENT_ID: "procurement-api"
+
+      # это используется твоим RolesGuard (он смотрит resource_access[clientId])
+      KEYCLOAK_CLIENT_ID: "procurement-api"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: procurement-web
+    restart: always
+    depends_on:
+      - api
+      - keycloak
+    ports:
+      - "4200:80"
 
 volumes:
   mongo_data:

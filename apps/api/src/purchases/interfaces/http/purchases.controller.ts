@@ -35,6 +35,7 @@ export class PurchasesController {
     Role.Initiator,
     Role.Statistic
   )
+
   @Get()
   async list(@Query() query: ListPurchasesDto) {
     return this.service.list(query);

@@ -1,14 +1,23 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ListInitiatorsUseCase } from '../../application/use-cases/list-initiators.use-case';
+import { Roles, RolesGuard } from '../../../auth/roles.guard';
+import { Role } from '../../../auth/roles';
+import { ListUsersByRoleUseCase } from '../../application/use-cases/list-users-by-role.use-case';
 
 @Controller('identity')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class IdentityController {
-  constructor(private readonly listInitiators: ListInitiatorsUseCase) {}
+  constructor(private readonly listUsers: ListUsersByRoleUseCase) {}
 
   @Get('initiators')
-  async initiators() {
-    return this.listInitiators.execute();
+  @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement)
+  initiators() {
+    return this.listUsers.execute(Role.Initiator);
+  }
+
+  @Get('procurements')
+  @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement)
+  procurements() {
+    return this.listUsers.execute(Role.Procurement);
   }
 }
