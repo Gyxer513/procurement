@@ -4,7 +4,7 @@ import { Model, ClientSession, Types } from 'mongoose';
 import { Purchase } from '../../../domain/entities/purchase.entity';
 import { IPurchaseRepository } from '../../../domain/interfaces/purchase.repository.interface';
 import { PurchaseDocument, PurchaseDoc } from './schemas/purchase.schema';
-import { PurchaseStatus } from '../../../domain';
+import { PurchaseStatus, type UserRef } from 'shared';
 import { parseEntryNumberAndDate } from '../../../application/utils/entry-parser';
 
 @Injectable()
@@ -95,6 +95,10 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
   }
 
   async create(purchase: Purchase, session?: ClientSession): Promise<Purchase> {
+    if (!(purchase as any).createdBy) {
+      throw new Error('createdBy is required');
+    }
+
     const toInsert = {
       ...purchase,
       _id: purchase.id ? new Types.ObjectId(purchase.id) : undefined,
@@ -104,14 +108,20 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
     const doc = Array.isArray(created) ? created[0] : created;
     return this.toEntity(doc)!;
   }
-
   async update(
     id: string,
     data: Partial<Purchase>,
     session?: ClientSession
   ): Promise<Purchase> {
+    const normalized = this.normalizeEntryFields(data);
+    const { createdBy, ...rest } = normalized as any;
+    const safeUpdate = {
+      ...rest,
+      ...(createdBy ? { createdBy } : {}),
+    };
+
     const updated = await this.model
-      .findByIdAndUpdate(id, { $set: data }, { new: true, session })
+      .findByIdAndUpdate(id, { $set: safeUpdate }, { new: true, session })
       .lean<PurchaseDoc>({ virtuals: true })
       .exec();
 
@@ -122,20 +132,32 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
   async changeStatus(
     id: string,
     status: PurchaseStatus,
-    comment?: string,
+    opts?: {
+      comment?: string;
+      procurementResponsible?: UserRef;
+    },
     session?: ClientSession
   ): Promise<Purchase> {
     const now = new Date();
-    const update = {
+
+    const update: any = {
       $set: { status, lastStatusChangedAt: now },
       $push: {
         statusHistory: {
           status,
           changedAt: now,
-          ...(comment && { comment }),
+          ...(opts?.comment && { comment: opts.comment }),
+          ...(opts?.procurementResponsible && {
+            procurementResponsible: opts.procurementResponsible,
+          }),
         },
       },
     };
+
+    // если при смене статуса назначили/сменили ответственного — обновим текущее поле
+    if (opts?.procurementResponsible) {
+      update.$set.procurementResponsible = opts.procurementResponsible;
+    }
 
     const doc = await this.model
       .findByIdAndUpdate(id, update, { new: true, session })
@@ -146,8 +168,18 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
     return this.toEntity(doc)!;
   }
 
-  async delete(id: string): Promise<void> {
-    await this.model.findByIdAndDelete(id).exec();
+  async setDeleted(
+    id: string,
+    isDeleted: boolean,
+    session?: ClientSession
+  ): Promise<Purchase> {
+    const updated = await this.model
+      .findByIdAndUpdate(id, { $set: { isDeleted } }, { new: true, session })
+      .lean<PurchaseDoc>({ virtuals: true })
+      .exec();
+
+    if (!updated) throw new Error('Purchase not found');
+    return this.toEntity(updated)!;
   }
 
   async findForExport(filter: any, limit: number): Promise<Purchase[]> {

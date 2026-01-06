@@ -1,6 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
-import { PurchaseStatus, PurchaseSite } from '../../../../domain';
+import { HydratedDocument } from 'mongoose';
+import {
+  PurchaseStatus,
+  PurchaseSite,
+  PURCHASE_CATEGORIES,
+  PurchaseCategory,
+  UserRefSchemaFactory,
+  UserRef,
+} from 'shared';
 
 // ──────────────────────────────────────────────────────────────
 // Вложенная схема для истории статусов
@@ -86,6 +93,22 @@ export class PurchaseDocument {
 
   @Prop({ type: Date })
   lastStatusChangedAt?: Date;
+
+  @Prop({
+    type: String,
+    enum: PURCHASE_CATEGORIES,
+    index: true,
+  })
+  category?: PurchaseCategory;
+
+  @Prop({ type: UserRefSchemaFactory, required: true })
+  createdBy!: UserRef;
+
+  @Prop({ type: UserRefSchemaFactory })
+  procurementResponsible?: UserRef;
+
+  @Prop({ type: Boolean, default: false, index: true })
+  isDeleted!: boolean;
 }
 
 export const PurchaseSchema = SchemaFactory.createForClass(PurchaseDocument);

@@ -1,10 +1,10 @@
-import { PurchaseStatus } from '../enums/purchase-status.enum';
+import { PurchaseStatus } from 'shared';
 
 export class StatusHistoryEntry {
   constructor(
     public readonly status: PurchaseStatus,
     public readonly changedAt: Date,
-    public readonly comment?: string,
+    public readonly comment?: string
   ) {}
 
   static create(status: PurchaseStatus, comment?: string): StatusHistoryEntry {

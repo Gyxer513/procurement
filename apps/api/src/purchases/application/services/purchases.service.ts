@@ -23,30 +23,33 @@ export class PurchasesService {
     private readonly purchaseRepository: IPurchaseRepository
   ) {}
 
+  // обычный список должен исключать удалённые (лучше сделать это внутри use-case, см. ниже)
   list = (dto: any) => this.listUseCase.execute(dto);
-  listDeleted = (dto: any) => this.getUseCase.listDeleted(dto);
+
+  // список удалённых — тоже лучше делать через listUseCase, но с фильтром isDeleted:true
+  listDeleted = (dto: any) =>
+    this.listUseCase.execute({ ...dto, isDeleted: true });
+
   findOne = (id: string) => this.getUseCase.execute(id);
   create = (dto: Partial<Purchase>) => this.createUseCase.execute(dto);
   update = (id: string, dto: Partial<Purchase>) =>
     this.updateUseCase.execute(id, dto);
+
   setStatus = (id: string, status: PurchaseStatus, comment?: string) =>
     this.changeStatusUseCase.execute(id, status, comment);
 
-  // вместо физического удаления — ставим статус Deleted
+  // soft-delete вместо смены статуса
   remove = async (id: string) => {
-    // если уже Deleted — можно либо вернуть ok, либо кинуть ошибку
-    const purchase = await this.getUseCase.execute(id);
-    if (purchase.status === PurchaseStatus.Deleted) {
-      return { deleted: true };
-    }
-
-    await this.changeStatusUseCase.execute(
-      id,
-      PurchaseStatus.Deleted,
-      'Удалено'
-    );
-
+    // если нужно "идемпотентно" — можно сначала прочитать, но не обязательно
+    await this.purchaseRepository.setDeleted(id, true);
     return { deleted: true };
+  };
+  setDeleted = (id: string, isDeleted: boolean) =>
+    this.purchaseRepository.setDeleted(id, isDeleted);
+  // (опционально) восстановление
+  restore = async (id: string) => {
+    await this.purchaseRepository.setDeleted(id, false);
+    return { restored: true };
   };
 
   export = (dto: any) => this.exportUseCase.execute(dto);

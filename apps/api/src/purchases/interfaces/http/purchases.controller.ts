@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Patch,
-  Delete,
   Body,
   Param,
   Query,
@@ -21,6 +20,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles, RolesGuard } from '../../../auth/roles.guard';
 import { BatchResult } from '../../domain/entities/BatchResult.type';
 import { Role } from '../../../auth/roles';
+import { SetDeletedDto } from '../../application/dto/set-deleted.dto';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('purchases')
@@ -35,7 +35,6 @@ export class PurchasesController {
     Role.Initiator,
     Role.Statistic
   )
-
   @Get()
   async list(@Query() query: ListPurchasesDto) {
     return this.service.list(query);
@@ -108,10 +107,13 @@ export class PurchasesController {
 
   // Удаление: админы
   @Roles(Role.SeniorAdmin)
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.service.remove(id);
-    return { deleted: true };
+  @Patch(':id/deleted')
+  @HttpCode(200)
+  async setDeleted(
+    @Param('id') id: string,
+    @Body() dto: SetDeletedDto
+  ): Promise<Purchase> {
+    return this.service.setDeleted(id, dto.isDeleted);
   }
 
   // Batch: только senior_admin
