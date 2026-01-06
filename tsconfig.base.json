@@ -10,7 +10,9 @@
       "@features/*": ["apps/web/src/features/*"],
       "@entities/*": ["apps/web/src/entities/*"],
       "@shared/*": ["apps/web/src/shared/*"],
-      "@/*": ["apps/web/src/*"]
+      "@/*": ["apps/web/src/*"],
+      "shared": ["shared/index.ts"],
+      "shared/*": ["shared/*"],
     },
     "rootDir": ".",
     "sourceMap": true,
@@ -23,7 +25,7 @@
     "module": "esnext",
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
+    "skipDefaultLibCheck": true
   },
   "exclude": ["node_modules", "tmp"]
 }

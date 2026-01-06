@@ -1,5 +1,4 @@
-import { PurchaseStatus } from '../enums/purchase-status.enum';
-import { PurchaseSite } from '../enums/purchase-site.enum';
+import { PurchaseSite, PurchaseStatus } from 'shared';
 import { StatusHistoryEntry } from '../value-objects/status-history.vo';
 
 export class Purchase {

@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Purchase } from '../../domain/entities/purchase.entity';
-import { PurchaseStatus } from '../../domain';
+import { PurchaseStatus } from 'shared';
 import { IPurchaseRepository } from '../../domain/interfaces/purchase.repository.interface';
 import { ListPurchasesUseCase } from '../use-cases/list-purchases.use-case';
 import { GetPurchaseUseCase } from '../use-cases/get-purchase.use-case';

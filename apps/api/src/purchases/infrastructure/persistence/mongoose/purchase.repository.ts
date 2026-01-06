@@ -132,32 +132,37 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
   async changeStatus(
     id: string,
     status: PurchaseStatus,
-    opts?: {
-      comment?: string;
-      procurementResponsible?: UserRef;
-    },
+    commentOrOpts?:
+      | string
+      | { comment?: string; procurementResponsible?: UserRef },
     session?: ClientSession
   ): Promise<Purchase> {
     const now = new Date();
 
-    const update: any = {
-      $set: { status, lastStatusChangedAt: now },
+    const opts =
+      typeof commentOrOpts === 'string'
+        ? { comment: commentOrOpts }
+        : commentOrOpts ?? {};
+
+    const update = {
+      $set: {
+        status,
+        lastStatusChangedAt: now,
+        ...(opts.procurementResponsible && {
+          procurementResponsible: opts.procurementResponsible,
+        }),
+      },
       $push: {
         statusHistory: {
           status,
           changedAt: now,
-          ...(opts?.comment && { comment: opts.comment }),
-          ...(opts?.procurementResponsible && {
+          ...(opts.comment && { comment: opts.comment }),
+          ...(opts.procurementResponsible && {
             procurementResponsible: opts.procurementResponsible,
           }),
         },
       },
     };
-
-    // если при смене статуса назначили/сменили ответственного — обновим текущее поле
-    if (opts?.procurementResponsible) {
-      update.$set.procurementResponsible = opts.procurementResponsible;
-    }
 
     const doc = await this.model
       .findByIdAndUpdate(id, update, { new: true, session })

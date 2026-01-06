@@ -9,7 +9,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { PurchaseSite, PurchaseStatus } from '../../domain';
+import { PurchaseSite, PurchaseStatus } from 'shared';
 
 export class ListPurchasesDto {
   @IsOptional() @IsString() q?: string;

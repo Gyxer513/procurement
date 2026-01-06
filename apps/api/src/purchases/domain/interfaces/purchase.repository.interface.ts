@@ -1,6 +1,6 @@
 import { Purchase } from '../entities/purchase.entity';
 import { ClientSession } from 'mongoose';
-import { UserRef, PurchaseStatus } from 'shared';
+import { PurchaseStatus } from 'shared';
 
 export interface IPurchaseRepository {
   findAll(
@@ -27,7 +27,7 @@ export interface IPurchaseRepository {
   changeStatus(
     id: string,
     status: PurchaseStatus,
-    opts?: { comment?: string; procurementResponsible?: UserRef },
+    commentOrOpts?: string | { comment?: string; procurementResponsible?: any },
     session?: ClientSession
   ): Promise<Purchase>;
 

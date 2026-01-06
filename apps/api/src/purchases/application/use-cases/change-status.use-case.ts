@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { Purchase } from '../../domain/entities/purchase.entity';
-import { PurchaseStatus } from '../../domain';
+import { PurchaseStatus } from 'shared';
 import { IPurchaseRepository } from '../../domain/interfaces/purchase.repository.interface';
 
 @Injectable()
