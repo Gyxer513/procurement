@@ -5,7 +5,6 @@ import { keycloak } from '@/auth/keycloak';
 type Props = {
   role: string;
   children: ReactNode;
-  /** Если не передать — возьмем keycloak.clientId */
   clientId?: string;
 };
 
