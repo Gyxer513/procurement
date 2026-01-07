@@ -10,7 +10,7 @@ export function PurchaseDetailsPage() {
   if (!id) return null;
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Space orientation="vertical" size="large" style={{ width: '100%' }}>
       <Space wrap>
         <Button onClick={() => navigate(-1)}>Назад</Button>
         <DeletePurchaseButton id={id} />

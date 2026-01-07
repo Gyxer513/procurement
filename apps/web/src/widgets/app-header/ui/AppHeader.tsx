@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useCurrentUser } from '@entities/user/model/useCurrentUser';
 import { ThemeToggle } from '@features/theme/toggle';
 import { LogoutButton } from '@features/logout';
+import { RoleGate } from '@shared/ui/RoleGate/RoleGate';
+import { Role } from '@/lib/auth/roles';
 
 const { Header } = Layout;
 
@@ -11,15 +13,9 @@ export function AppHeader() {
   const location = useLocation();
   const { token } = theme.useToken();
 
-  const { login, fullName, hasRole } = useCurrentUser();
-  const isSeniorAdmin = hasRole('senior_admin');
-  const selectedKey = location.pathname.split('/')[1] || 'purchases';
+  const { login, fullName } = useCurrentUser();
 
-  const items = [
-    { key: 'purchases', label: 'Закупки' },
-    { key: 'reports', label: 'Отчеты' },
-    ...(isSeniorAdmin ? [{ key: 'admin', label: 'Админ панель' }] : []),
-  ];
+  const selectedKey = location.pathname.split('/')[1] || 'purchases';
 
   return (
     <Header
@@ -40,16 +36,24 @@ export function AppHeader() {
         <Menu
           mode="horizontal"
           selectedKeys={[selectedKey]}
-          items={items}
           onClick={(e) => navigate(`/${e.key}`)}
           style={{ minWidth: 360, background: 'transparent' }}
-        />
+        >
+          <Menu.Item key="purchases">Закупки</Menu.Item>
+          <Menu.Item key="reports">Отчеты</Menu.Item>
+
+          <RoleGate anyOf={[Role.SeniorAdmin]}>
+            <Menu.Item key="admin">Админ панель</Menu.Item>
+          </RoleGate>
+          <RoleGate anyOf={[Role.SeniorAdmin]}>
+            <Menu.Item key="deleted-purchases">Удаленные закупки</Menu.Item>
+          </RoleGate>
+        </Menu>
       </div>
 
       <Space align="center" size={12}>
         <ThemeToggle />
 
-        {/* ФИО над логином + ellipsis для длинной почты */}
         <div
           style={{
             display: 'flex',

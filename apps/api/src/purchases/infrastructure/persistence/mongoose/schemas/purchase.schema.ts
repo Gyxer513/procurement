@@ -14,7 +14,6 @@ import {
 // ──────────────────────────────────────────────────────────────
 @Schema({ _id: false })
 export class StatusHistoryEntrySchema {
-  // ВОТ ЭТОТ ДЕКОРАТОР БЫЛ ПРОПУЩЕН → ОШИБКА!
   @Prop({
     type: String,
     enum: PurchaseStatus,

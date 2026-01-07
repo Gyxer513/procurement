@@ -21,6 +21,22 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
     );
   }
 
+  private applyNotDeleted(filter: any = {}) {
+    if (filter?.isDeleted !== undefined) return filter;
+
+    return { ...filter, isDeleted: { $ne: true } };
+  }
+
+  async findById(id: string): Promise<Purchase | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    const doc = await this.model
+      .findOne({ _id: id, isDeleted: { $ne: true } })
+      .lean<PurchaseDoc>({ virtuals: true })
+      .exec();
+
+    return this.toEntity(doc);
+  }
   private normalizeEntryFields(doc: Partial<Purchase>): Partial<Purchase> {
     // поддержим разные входы: incomingNumber / entryRaw / entryNumber
     const combined =
@@ -72,7 +88,9 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
     filter: any,
     options: { skip?: number; limit?: number; sort?: Record<string, 1 | -1> }
   ): Promise<Purchase[]> {
-    const query = this.model.find(filter);
+    const finalFilter = this.applyNotDeleted(filter);
+
+    const query = this.model.find(finalFilter);
     if (options.sort) query.sort(options.sort);
     if (options.skip !== undefined) query.skip(options.skip);
     if (options.limit !== undefined) query.limit(options.limit);
@@ -82,16 +100,8 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
   }
 
   async count(filter: any): Promise<number> {
-    return this.model.countDocuments(filter).exec();
-  }
-
-  async findById(id: string): Promise<Purchase | null> {
-    if (!Types.ObjectId.isValid(id)) return null;
-    const doc = await this.model
-      .findById(id)
-      .lean<PurchaseDoc>({ virtuals: true })
-      .exec();
-    return this.toEntity(doc);
+    const finalFilter = this.applyNotDeleted(filter);
+    return this.model.countDocuments(finalFilter).exec();
   }
 
   async create(purchase: Purchase, session?: ClientSession): Promise<Purchase> {
@@ -188,8 +198,10 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
   }
 
   async findForExport(filter: any, limit: number): Promise<Purchase[]> {
+    const finalFilter = this.applyNotDeleted(filter);
+
     const docs = await this.model
-      .find(filter)
+      .find(finalFilter)
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean<PurchaseDoc>({ virtuals: true })

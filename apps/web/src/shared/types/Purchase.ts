@@ -57,13 +57,15 @@ export type PurchaseListParams = {
   responsible?: string;
 
   year?: number;
-  dateFrom?: string; // 'YYYY-MM-DD'
-  dateTo?: string; // 'YYYY-MM-DD'
+  dateFrom?: string;
+  dateTo?: string;
 
-  status?: string;
-  site?: string;
+  status?: PurchaseStatus;
+  site?: PurchaseSite;
+
   lastStatusChangedFrom?: string;
   lastStatusChangedTo?: string;
+
   bankGuaranteeFromFrom?: string;
   bankGuaranteeFromTo?: string;
   bankGuaranteeToFrom?: string;
@@ -79,7 +81,7 @@ export type BatchResponse = {
 
 export type PurchaseCreateDto = Omit<
   Purchase,
-  '_id' | 'createdAt' | 'updatedAt'
+  'id' | 'createdAt' | 'updatedAt'
 >;
 export type PurchaseUpdateDto = Partial<PurchaseCreateDto>;
 export type Field = keyof Purchase;
