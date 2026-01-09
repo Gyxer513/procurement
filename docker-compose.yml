@@ -59,7 +59,6 @@ services:
     environment:
       PORT: '${API_INTERNAL_PORT}'
 
-      # Mongo внутри docker-сети (собираем из переменных)
       MONGO_URI: 'mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/${MONGO_INITDB_DATABASE}?authSource=admin'
 
       KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER}

@@ -27,7 +27,6 @@ import { SetDeletedDto } from '../../application/dto/set-deleted.dto';
 export class PurchasesController {
   constructor(private readonly service: PurchasesService) {}
 
-  // Просмотр списка: всем ролям (инициатор потом будет фильтроваться "только своё")
   @Roles(
     Role.SeniorAdmin,
     Role.Admin,
@@ -39,7 +38,32 @@ export class PurchasesController {
   async list(@Query() query: ListPurchasesDto) {
     return this.service.list(query);
   }
+  // Batch: только senior_admin
+  @Roles(Role.SeniorAdmin)
+  @Post('batch')
+  @HttpCode(200)
+  async batch(
+    @Body()
+    body: {
+      items: Partial<Purchase>[];
+      mode?: 'insert' | 'upsert';
+      matchBy?: keyof Purchase;
+    }
+  ): Promise<BatchResult> {
+    if (!body || !Array.isArray(body.items) || body.items.length === 0) {
+      throw new BadRequestException('Body.items must be a non-empty array');
+    }
 
+    const mode = body.mode ?? 'upsert';
+    if (mode === 'insert') {
+      throw new BadRequestException('Insert mode is not supported yet');
+    }
+
+    return this.service.batchUpsert(body.items, {
+      matchBy: body.matchBy ?? 'entryNumber',
+      writeStatusHistoryOnInsert: true,
+    });
+  }
   // Экспорт: обычно только статист/закупки/админы
   @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement, Role.Statistic)
   @Get('export')
@@ -114,32 +138,5 @@ export class PurchasesController {
     @Body() dto: SetDeletedDto
   ): Promise<Purchase> {
     return this.service.setDeleted(id, dto.isDeleted);
-  }
-
-  // Batch: только senior_admin
-  @Roles(Role.SeniorAdmin)
-  @Post('batch')
-  @HttpCode(200)
-  async batch(
-    @Body()
-    body: {
-      items: Partial<Purchase>[];
-      mode?: 'insert' | 'upsert';
-      matchBy?: keyof Purchase;
-    }
-  ): Promise<BatchResult> {
-    if (!body || !Array.isArray(body.items) || body.items.length === 0) {
-      throw new BadRequestException('Body.items must be a non-empty array');
-    }
-
-    const mode = body.mode ?? 'upsert';
-    if (mode === 'insert') {
-      throw new BadRequestException('Insert mode is not supported yet');
-    }
-
-    return this.service.batchUpsert(body.items, {
-      matchBy: body.matchBy ?? 'entryNumber',
-      writeStatusHistoryOnInsert: true,
-    });
   }
 }

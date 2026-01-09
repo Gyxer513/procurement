@@ -99,7 +99,6 @@ export class PurchasesApi {
     return { blob, filename };
   }
 
-  // batch оставляем как у вас; можно также вынести request в json()
   async postBatchOnce(
     body: {
       items: Partial<Purchase>[];
