@@ -200,9 +200,8 @@ export class PurchaseRepository implements IPurchaseRepository, OnModuleInit {
     try {
       const normalized = this.normalizeEntryFields(data);
 
-      // createdBy обновляем только если передали явно
       const { createdBy, ...rest } = normalized as any;
-      const safeUpdate = { ...rest, ...(createdBy ? { createdBy } : {}) };
+      const safeUpdate = { ...rest };
 
       const updated = await this.model
         .findByIdAndUpdate(id, { $set: safeUpdate }, { new: true, session })

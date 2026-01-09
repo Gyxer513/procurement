@@ -1,6 +1,6 @@
 type QueryValue = string | number | boolean | Date | null | undefined;
 
-function toQueryRecord<T extends Record<string, any>>(
+export function toQueryRecord<T extends Record<string, any>>(
   params: T,
   allowedKeys: readonly (keyof T)[]
 ) {

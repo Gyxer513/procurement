@@ -1,7 +1,7 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles, RolesGuard } from '../../../auth/roles.guard';
-import { Role } from '../../../auth/roles';
+import { Role } from 'shared';
 import { ListUsersByRoleUseCase } from '../../application/use-cases/list-users-by-role.use-case';
 
 @Controller('identity')

@@ -1,8 +1,9 @@
-import { PurchaseSite, PurchaseStatus } from 'shared';
+import { PurchaseSite, PurchaseStatus, type UserRef } from 'shared';
 import { StatusHistoryEntry } from '../value-objects/status-history.vo';
 
 export class Purchase {
   id?: string;
+  createdBy?: UserRef;
   entryNumber?: string;
   entryDate: Date;
   contractSubject?: string;
@@ -71,7 +72,9 @@ export class Purchase {
     const entity = new Purchase();
 
     entity.id = doc._id?.toString();
+    entity.createdBy = doc.createdBy;
     entity.entryNumber = doc.entryNumber;
+    entity.entryDate = doc.entryDate;
     entity.contractSubject = doc.contractSubject;
     entity.supplierName = doc.supplierName;
     entity.smp = doc.smp;
@@ -109,6 +112,7 @@ export class Purchase {
         )
       );
     }
+
     entity.lastStatusChangedAt = doc.lastStatusChangedAt;
     entity.createdAt = doc.createdAt;
     entity.updatedAt = doc.updatedAt;

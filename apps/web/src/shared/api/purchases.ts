@@ -11,6 +11,7 @@ import {
 import { authFetch } from '@shared/api/authFetch';
 import { LIST_KEYS } from '@shared/config/listKeys';
 import { addQuery, Query } from '@shared/utils/addQuery';
+import { toQueryRecord } from '@shared/utils/pickQuery';
 
 export class PurchasesApi {
   private baseHref: string;

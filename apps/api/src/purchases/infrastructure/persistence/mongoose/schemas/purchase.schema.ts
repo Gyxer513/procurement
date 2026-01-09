@@ -9,6 +9,22 @@ import {
   UserRef,
 } from 'shared';
 
+@Schema({ _id: false })
+class UserRefSchema {
+  @Prop({ required: true })
+  id: string; // keycloak sub
+
+  @Prop()
+  username?: string;
+
+  @Prop()
+  email?: string;
+
+  @Prop()
+  fullName?: string;
+}
+
+const UserRefMongooseSchema = SchemaFactory.createForClass(UserRefSchema);
 // ──────────────────────────────────────────────────────────────
 // Вложенная схема для истории статусов
 // ──────────────────────────────────────────────────────────────
@@ -23,7 +39,6 @@ export class StatusHistoryEntrySchema {
 
   @Prop({ type: Date, required: true, default: Date.now })
   changedAt!: Date;
-
   @Prop({ type: String })
   comment?: string;
 }
@@ -43,7 +58,6 @@ export const StatusHistoryEntrySchemaFactory = SchemaFactory.createForClass(
 export class PurchaseDocument {
   @Prop({ unique: true, sparse: true })
   entryNumber?: string;
-
   @Prop() contractSubject?: string;
   @Prop() supplierName?: string;
   @Prop() smp?: boolean;
@@ -100,8 +114,8 @@ export class PurchaseDocument {
   })
   category?: PurchaseCategory;
 
-  @Prop({ type: UserRefSchemaFactory, required: true })
-  createdBy!: UserRef;
+  @Prop({ type: UserRefMongooseSchema, required: false })
+  createdBy?: UserRefSchema;
 
   @Prop({ type: UserRefSchemaFactory })
   procurementResponsible?: UserRef;

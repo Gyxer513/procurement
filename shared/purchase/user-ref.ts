@@ -1,7 +1,8 @@
 export type UserRef = {
-  fullName: string;
-  email: string;
-  keycloakId?: string;
+  id: string;
+  username?: string;
+  email?: string;
+  fullName?: string;
 };
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';

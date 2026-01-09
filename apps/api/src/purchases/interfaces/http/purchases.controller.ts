@@ -19,8 +19,23 @@ import { SetStatusDto } from '../../application/dto/set-status.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles, RolesGuard } from '../../../auth/roles.guard';
 import { BatchResult } from '../../domain/entities/BatchResult.type';
-import { Role } from '../../../auth/roles';
+import { Role } from 'shared';
 import { SetDeletedDto } from '../../application/dto/set-deleted.dto';
+import { CurrentUser } from '../../../auth/current-user.decorator';
+
+import type { UserRef } from 'shared';
+
+export function keycloakUserToRef(user: any): UserRef {
+  return {
+    id: user.sub,
+    username: user.preferred_username ?? user.username,
+    email: user.email,
+    fullName:
+      user.name ??
+      ([user.given_name, user.family_name].filter(Boolean).join(' ') ||
+        undefined),
+  };
+}
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('purchases')
@@ -98,8 +113,12 @@ export class PurchasesController {
   // Создание: закупки/инициатор/админы
   @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement, Role.Initiator)
   @Post()
-  async create(@Body() dto: Partial<Purchase>): Promise<Purchase> {
-    return this.service.create(dto);
+  async create(
+    @Body() dto: Partial<Purchase>,
+    @CurrentUser() user: any
+  ): Promise<Purchase> {
+    const createdBy = keycloakUserToRef(user);
+    return this.service.create(dto, createdBy);
   }
 
   // Обновление: закупки/инициатор/админы (ограничение "инициатор только своё" позже)
