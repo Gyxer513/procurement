@@ -39,16 +39,13 @@ export function PurchaseForm({
   const isStat = has(roles, Role.Statistic);
   const isInit = has(roles, Role.Initiator);
 
-  // readOnly режим: Admin(edit), Statistic, Initiator
   const readOnly = (!isCreate && isAdmin) || isStat || isInit;
-
-  // Admin-create: отдельная “обрезанная” форма
   const isAdminCreate = isCreate && isAdmin;
 
-  // Полная форма (create/edit) для SeniorAdmin/Procurement, а также просмотр для остальных
-  const renderFull = !isAdminCreate;
+  const disableEntryDate = readOnly || isAdminCreate || isSenior || isProc;
+  const disableEntryNumber = readOnly || isProc;
 
-  // Применяем initialValues (для edit)
+  // initialValues для edit
   useEffect(() => {
     if (!initialValues) return;
 
@@ -72,32 +69,25 @@ export function PurchaseForm({
     });
   }, [initialValues, form]);
 
-  // Admin-create: статус “В работе” и entryDate текущая
+  // Admin-create defaults
   useEffect(() => {
     if (!isAdminCreate) return;
 
     form.setFieldsValue({
-      status: (PurchaseStatus as any).InWork ?? 'В работе',
+      status: PurchaseStatus.InProgress, // или 'В работе', если enum строкой
       entryDate: dayjs(),
     });
   }, [isAdminCreate, form]);
 
-  // Ограничения на редактирование отдельных полей (кроме “не рисовать секции”):
-  // - SeniorAdmin: нельзя менять entryDate
-  // - Procurement: нельзя менять entryNumber и entryDate
-  // - ReadOnly: всё disabled (но рисуем для просмотра)
-  const disableEntryDate = true;
-  const disableEntryNumber = readOnly || isProc; // procurement не меняет номер
   return (
     <Form form={form} layout="vertical">
-      {isAdminCreate && (
+      {isAdminCreate ? (
         <AdminCreateSection
-          entryDate={form.getFieldValue('entryDate')}
-          // entryDate показываем, но не даём менять
+          readOnly={false}
+          disableEntryDate={disableEntryDate}
+          disableEntryNumber={disableEntryNumber}
         />
-      )}
-
-      {renderFull && (
+      ) : (
         <>
           <MetaSection
             id={id}
@@ -106,17 +96,12 @@ export function PurchaseForm({
             readOnly={readOnly}
             disableEntryNumber={disableEntryNumber}
             disableEntryDate={disableEntryDate}
-            // status/site в meta: senior/proc могут менять, readOnly — нет
             disableMetaEditable={readOnly}
-            // если хотите: procurement не должен менять status? сейчас разрешено
           />
 
           <SupplierSection readOnly={readOnly} />
-
           <ContractSection readOnly={readOnly} />
-
           <FinanceSection form={form} readOnly={readOnly} />
-
           <OtherSection readOnly={readOnly} />
         </>
       )}

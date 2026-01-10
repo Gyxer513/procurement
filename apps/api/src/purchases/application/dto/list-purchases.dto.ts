@@ -43,7 +43,6 @@ export class ListPurchasesDto {
   @Min(2025)
   year?: number;
 
-  // '2025-01-01' — валидный ISO8601 date-only, IsDateString пропускает
   @IsOptional()
   @IsDateString()
   dateFrom?: string; // YYYY-MM-DD

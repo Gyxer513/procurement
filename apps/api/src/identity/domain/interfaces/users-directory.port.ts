@@ -8,4 +8,5 @@ export type DirectoryUser = {
 
 export abstract class UsersDirectoryPort {
   abstract listUsersByClientRole(roleName: string): Promise<DirectoryUser[]>;
+  abstract getUserById(id: string): Promise<DirectoryUser | null>;
 }

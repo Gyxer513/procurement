@@ -1,3 +1,4 @@
+// identity/infrastructure/keycloak/keycloak-users-directory.adapter.ts
 import { Injectable } from '@nestjs/common';
 import {
   UsersDirectoryPort,
@@ -14,12 +15,15 @@ type KCUser = {
 };
 
 @Injectable()
-export class KeycloakUsersDirectoryAdapter implements UsersDirectoryPort {
-  constructor(private readonly kc: KeycloakAdminClient) {}
+export class KeycloakUsersDirectoryAdapter extends UsersDirectoryPort {
+  constructor(private readonly kc: KeycloakAdminClient) {
+    super();
+  }
 
   async listUsersByClientRole(roleName: string): Promise<DirectoryUser[]> {
     const sourceClientId =
       process.env.KEYCLOAK_ROLES_SOURCE_CLIENT_ID ?? 'procurement-api';
+
     const clientUuid = await this.kc.resolveClientUuid(sourceClientId);
 
     const users = (await this.kc.getUsersByClientRole(
@@ -38,5 +42,18 @@ export class KeycloakUsersDirectoryAdapter implements UsersDirectoryPort {
       .sort((a, b) =>
         (a.lastName ?? a.username).localeCompare(b.lastName ?? b.username, 'ru')
       );
+  }
+
+  async getUserById(id: string): Promise<DirectoryUser | null> {
+    const u = (await this.kc.getUserById(id)) as KCUser | null;
+    if (!u) return null;
+
+    return {
+      id: u.id,
+      username: u.username,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      email: u.email,
+    };
   }
 }

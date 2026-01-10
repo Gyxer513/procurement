@@ -79,7 +79,10 @@ export class PurchaseDocument {
   @Prop() additionalAgreementNumber?: string;
   @Prop() currentContractAmount?: number;
   @Prop() publication?: string;
-  @Prop() responsible?: string;
+  @Prop({ type: UserRefSchemaFactory, required: false })
+  responsible?: UserRef;
+  @Prop({ type: UserRefSchemaFactory })
+  procurementResponsible?: UserRef;
   @Prop() planNumber?: string;
   @Prop() applicationAmount?: number;
   @Prop() comment?: string;
@@ -116,9 +119,6 @@ export class PurchaseDocument {
 
   @Prop({ type: UserRefMongooseSchema, required: false })
   createdBy?: UserRefSchema;
-
-  @Prop({ type: UserRefSchemaFactory })
-  procurementResponsible?: UserRef;
 
   @Prop({ type: Boolean, default: false, index: true })
   isDeleted!: boolean;

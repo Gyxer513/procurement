@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { AxiosError } from 'axios';
 
 type KCClient = { id: string; clientId: string };
 
@@ -113,5 +114,17 @@ export class KeycloakAdminClient {
     return this.adminGet<any[]>(
       `/clients/${clientUuid}/roles/${encodeURIComponent(roleName)}/users`
     );
+  }
+  private isAxiosError(e: any): e is AxiosError {
+    return !!e?.isAxiosError;
+  }
+
+  async getUserById(id: string): Promise<any | null> {
+    try {
+      return await this.adminGet<any>(`/users/${encodeURIComponent(id)}`);
+    } catch (e: any) {
+      if (this.isAxiosError(e) && e.response?.status === 404) return null;
+      throw e;
+    }
   }
 }
