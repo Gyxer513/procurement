@@ -1,7 +1,6 @@
 export type DirectoryUser = {
   id: string;
   username: string;
-  firstName?: string;
-  lastName?: string;
+  fullName?: string;
   email?: string;
 };

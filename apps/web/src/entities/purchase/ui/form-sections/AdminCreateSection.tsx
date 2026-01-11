@@ -1,6 +1,6 @@
 import { Form, Input, DatePicker, Select, InputNumber } from 'antd';
 import { PURCHASE_SITE_OPTIONS } from '@shared/config/purchaseSites';
-import { InitiatorField } from '@features/select-initiator/ui/InitiatorField';
+import { UserRefFields } from '@features/select-user/ui/UserRefFields';
 
 type Props = {
   readOnly: boolean;
@@ -30,7 +30,7 @@ export function AdminCreateSection({
         />
       </Form.Item>
 
-      <InitiatorField disabled={readOnly} />
+      <UserRefFields disabled={readOnly} name="initiator" />
 
       <Form.Item
         name="site"

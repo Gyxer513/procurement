@@ -4,7 +4,7 @@ import { identityApi } from '@shared/api/identityApi';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 
 const labelOf = (u: DirectoryUser) =>
-  u.lastName || u.username || u.email || u.id;
+  u.fullName || u.username || u.email || u.id;
 
 export function useInitiatorsOptions(search: string) {
   const [items, setItems] = useState<DirectoryUser[]>([]);
@@ -49,8 +49,16 @@ export function useInitiatorsOptions(search: string) {
     [filtered]
   );
 
+  const byId = useMemo(() => {
+    const m = new Map<string, DirectoryUser>();
+    items.forEach((u) => m.set(u.id, u));
+    return m;
+  }, [items]);
+
   return {
     options,
+    users: filtered,
+    byId,
     loading,
     emptyTotal: loaded && items.length === 0,
     emptyFiltered: loaded && items.length > 0 && options.length === 0,

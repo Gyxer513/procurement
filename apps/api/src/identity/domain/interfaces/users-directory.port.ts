@@ -4,6 +4,7 @@ export type DirectoryUser = {
   firstName?: string;
   lastName?: string;
   email?: string;
+  fullName?: string;
 };
 
 export abstract class UsersDirectoryPort {

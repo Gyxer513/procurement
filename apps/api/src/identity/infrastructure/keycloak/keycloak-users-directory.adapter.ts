@@ -14,6 +14,11 @@ type KCUser = {
   email?: string;
 };
 
+function buildFullName(u: KCUser): string {
+  const full = `${u.lastName ?? ''} ${u.firstName ?? ''}`.trim();
+  return full || u.username || u.email || u.id;
+}
+
 @Injectable()
 export class KeycloakUsersDirectoryAdapter extends UsersDirectoryPort {
   constructor(private readonly kc: KeycloakAdminClient) {
@@ -38,9 +43,10 @@ export class KeycloakUsersDirectoryAdapter extends UsersDirectoryPort {
         firstName: u.firstName,
         lastName: u.lastName,
         email: u.email,
+        fullName: buildFullName(u), // <-- ВАЖНО
       }))
       .sort((a, b) =>
-        (a.lastName ?? a.username).localeCompare(b.lastName ?? b.username, 'ru')
+        (a.fullName ?? a.username).localeCompare(b.fullName ?? b.username, 'ru')
       );
   }
 
@@ -54,6 +60,7 @@ export class KeycloakUsersDirectoryAdapter extends UsersDirectoryPort {
       firstName: u.firstName,
       lastName: u.lastName,
       email: u.email,
+      fullName: buildFullName(u), // <-- ВАЖНО
     };
   }
 }
