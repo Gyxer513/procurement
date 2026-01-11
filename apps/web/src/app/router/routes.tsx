@@ -40,8 +40,15 @@ export const routes: RouteObject[] = [
           </RequireClientRole>
         ),
       },
+      {
+        path: 'deleted-purchases',
+        element: (
+          <RequireClientRole role="senior_admin" clientId="procurement-web">
+            <ReportsPage />
+          </RequireClientRole>
+        ),
+      },
 
-      // любой неизвестный путь -> /error/404
       { path: '*', element: <Navigate to="/error/404" replace /> },
     ],
   },

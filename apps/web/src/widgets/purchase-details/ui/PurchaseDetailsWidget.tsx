@@ -29,7 +29,7 @@ export function PurchaseDetailsWidget(props: { id: string }) {
     <Card
       loading={loading}
       title={
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <div>{title}</div>
           <div style={{ color: '#888', fontWeight: 400 }}>{extraHeader}</div>
         </Space>

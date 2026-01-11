@@ -1,13 +1,35 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
-import { PurchaseStatus, PurchaseSite } from '../../../../domain';
+import { HydratedDocument } from 'mongoose';
+import {
+  PurchaseStatus,
+  PurchaseSite,
+  PURCHASE_CATEGORIES,
+  PurchaseCategory,
+  UserRefSchemaFactory,
+  UserRef,
+} from 'shared';
 
+@Schema({ _id: false })
+class UserRefSchema {
+  @Prop({ required: true })
+  id: string; // keycloak sub
+
+  @Prop()
+  username?: string;
+
+  @Prop()
+  email?: string;
+
+  @Prop()
+  fullName?: string;
+}
+
+const UserRefMongooseSchema = SchemaFactory.createForClass(UserRefSchema);
 // ──────────────────────────────────────────────────────────────
 // Вложенная схема для истории статусов
 // ──────────────────────────────────────────────────────────────
 @Schema({ _id: false })
 export class StatusHistoryEntrySchema {
-  // ВОТ ЭТОТ ДЕКОРАТОР БЫЛ ПРОПУЩЕН → ОШИБКА!
   @Prop({
     type: String,
     enum: PurchaseStatus,
@@ -17,7 +39,6 @@ export class StatusHistoryEntrySchema {
 
   @Prop({ type: Date, required: true, default: Date.now })
   changedAt!: Date;
-
   @Prop({ type: String })
   comment?: string;
 }
@@ -37,7 +58,6 @@ export const StatusHistoryEntrySchemaFactory = SchemaFactory.createForClass(
 export class PurchaseDocument {
   @Prop({ unique: true, sparse: true })
   entryNumber?: string;
-
   @Prop() contractSubject?: string;
   @Prop() supplierName?: string;
   @Prop() smp?: boolean;
@@ -59,7 +79,10 @@ export class PurchaseDocument {
   @Prop() additionalAgreementNumber?: string;
   @Prop() currentContractAmount?: number;
   @Prop() publication?: string;
-  @Prop() responsible?: string;
+  @Prop({ type: UserRefSchemaFactory, required: false })
+  responsible?: UserRef;
+  @Prop({ type: UserRefSchemaFactory })
+  procurementResponsible?: UserRef;
   @Prop() planNumber?: string;
   @Prop() applicationAmount?: number;
   @Prop() comment?: string;
@@ -86,6 +109,19 @@ export class PurchaseDocument {
 
   @Prop({ type: Date })
   lastStatusChangedAt?: Date;
+
+  @Prop({
+    type: String,
+    enum: PURCHASE_CATEGORIES,
+    index: true,
+  })
+  category?: PurchaseCategory;
+
+  @Prop({ type: UserRefMongooseSchema, required: false })
+  createdBy?: UserRefSchema;
+
+  @Prop({ type: Boolean, default: false, index: true })
+  isDeleted!: boolean;
 }
 
 export const PurchaseSchema = SchemaFactory.createForClass(PurchaseDocument);

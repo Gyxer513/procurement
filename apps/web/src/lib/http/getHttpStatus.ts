@@ -1,12 +1,10 @@
 export function getHttpStatus(error: unknown): number | undefined {
   if (!error || typeof error !== 'object') return;
 
-  // fetch-обертка: { status: number }
   if ('status' in error && typeof (error as any).status === 'number') {
     return (error as any).status;
   }
 
-  // axios: error.response.status
   if ('response' in error && (error as any).response) {
     const s = (error as any).response.status;
     if (typeof s === 'number') return s;

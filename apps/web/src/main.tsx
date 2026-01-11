@@ -44,7 +44,6 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      // тут onError уже нельзя в v5 — только retry/ staleTime / gcTime и т.д.
     },
   },
 });

@@ -8,7 +8,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor() {
     const issuer = process.env.KEYCLOAK_ISSUER!;
     const jwksUri =
-      process.env.KEYCLOAK_JWKS_URI ?? `${issuer}/protocol/openid-connect/certs`;
+      process.env.KEYCLOAK_JWKS_URI ??
+      `${issuer}/protocol/openid-connect/certs`;
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -22,12 +23,26 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 10,
-        jwksUri, // <-- вот это важно
+        jwksUri,
       }),
     });
   }
 
   validate(payload: any) {
-    return payload;
+    const realmRoles: string[] = payload?.realm_access?.roles ?? [];
+
+    const apiClient = process.env.KEYCLOAK_API_CLIENT_ID ?? 'procurement-api';
+    const webClient = process.env.KEYCLOAK_WEB_CLIENT_ID ?? 'procurement-web';
+
+    const apiRoles: string[] =
+      payload?.resource_access?.[apiClient]?.roles ?? [];
+    const webRoles: string[] =
+      payload?.resource_access?.[webClient]?.roles ?? [];
+
+    return {
+      ...payload, // если тебе где-то нужен raw payload как раньше
+      sub: payload.sub,
+      roles: [...new Set([...realmRoles, ...apiRoles, ...webRoles])], // <- главное
+    };
   }
 }

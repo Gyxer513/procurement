@@ -23,7 +23,7 @@ export function DeletePurchaseButton(props: { id?: string }) {
       okButtonProps: { danger: true },
       cancelText: 'Отмена',
       onOk: async () => {
-        await purchasesApi.delete(id);
+        await purchasesApi.setDeleted(id, true);
         message.success('Закупка удалена');
         navigate('/purchases');
       },

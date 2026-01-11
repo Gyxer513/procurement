@@ -4,7 +4,6 @@ import { IEntryNumberService } from '../../entities/entry-number.service.interfa
 @Injectable()
 export class EntryNumberService implements IEntryNumberService {
   async nextPurchaseEntryNumber(): Promise<string> {
-    // временно. правильнее сделать sequence/counter в БД (атомарно)
     return `AUTO-${Date.now()}`;
   }
 }

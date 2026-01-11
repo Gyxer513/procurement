@@ -1,7 +1,7 @@
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { purchasesApi } from '@shared/api/purchases';
 import { useState } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { purchasesApi } from '@/shared/api/purchases';
-import type { PurchasesQuery } from './types';
+import { PurchasesQuery } from '@entities/purchase/model/types';
 
 export function usePurchasesList() {
   const [query, setQuery] = useState<PurchasesQuery>({
@@ -11,16 +11,24 @@ export function usePurchasesList() {
     sortOrder: 'desc',
   });
 
-  const { data, isFetching } = useQuery({
-    queryKey: ['Purchases', query],
-    queryFn: ({ signal }) => purchasesApi.list(query, signal),
+  const q = useQuery({
+    queryKey: ['Purchases', query] as const,
+    queryFn: ({ queryKey, signal }) => purchasesApi.list(queryKey[1], signal),
     placeholderData: keepPreviousData,
+    retry: false,
   });
+
+  if (q.isError) {
+    console.error('Purchases query error:', q.error);
+  }
 
   return {
     query,
     setQuery,
-    data,
-    isLoading: isFetching,
+    data: q.data,
+    isLoading: q.isLoading,
+    isFetching: q.isFetching,
+    isError: q.isError,
+    error: q.error,
   };
 }

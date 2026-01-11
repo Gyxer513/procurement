@@ -9,7 +9,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { PurchaseSite, PurchaseStatus } from '../../domain';
+import { PurchaseSite, PurchaseStatus } from 'shared';
 
 export class ListPurchasesDto {
   @IsOptional() @IsString() q?: string;
@@ -43,7 +43,6 @@ export class ListPurchasesDto {
   @Min(2025)
   year?: number;
 
-  // '2025-01-01' — валидный ISO8601 date-only, IsDateString пропускает
   @IsOptional()
   @IsDateString()
   dateFrom?: string; // YYYY-MM-DD

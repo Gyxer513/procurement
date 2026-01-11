@@ -3,13 +3,12 @@ FROM node:20-alpine AS build
 WORKDIR /app
 RUN corepack enable
 
-# корневые файлы monorepo
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json ./
-
-# исходники
-COPY apps ./apps
-
 RUN pnpm install --frozen-lockfile
+
+COPY apps ./apps
+COPY shared ./shared
+
 RUN pnpm nx build api
 
 # ---- run ----
@@ -23,5 +22,4 @@ COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/dist ./dist
 
 EXPOSE 3000
-
 CMD ["node", "dist/api/main.js"]

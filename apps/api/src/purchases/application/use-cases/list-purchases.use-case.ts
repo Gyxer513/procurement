@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IPurchaseRepository } from '../../domain/interfaces/purchase.repository.interface';
 import { ListPurchasesDto } from '../dto/list-purchases.dto';
-import { PurchaseStatus } from '../../domain';
 
 function escapeRegExp(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -28,20 +27,19 @@ export class ListPurchasesUseCase {
     const pageSize = Math.max(1, Math.min(200, Number(dto.pageSize ?? 20)));
     const skip = (page - 1) * pageSize;
 
-    // сортировка
     const sortBy = dto.sortBy ?? 'createdAt';
     const sortOrder = dto.sortOrder === 'asc' ? 1 : -1;
     const sort = { [sortBy]: sortOrder } as Record<string, 1 | -1>;
 
     // БАЗОВО: удалённые не показываем
-    const filter: any = { status: { $ne: PurchaseStatus.Deleted } };
+    const filter: any = { isDeleted: { $ne: true } };
 
-    // Если явно запросили Deleted в общем списке — отдаём пусто
-    if (dto.status === PurchaseStatus.Deleted) {
-      return { items: [], total: 0, page, pageSize };
+    // (опционально) если хочешь поддержать dto.isDeleted
+    if (typeof (dto as any).isDeleted === 'boolean') {
+      filter.isDeleted = (dto as any).isDeleted;
     }
 
-    // Статус (кроме Deleted)
+    // Статус — как и было, без привязки к удалённости
     if (dto.status) filter.status = dto.status;
 
     // site

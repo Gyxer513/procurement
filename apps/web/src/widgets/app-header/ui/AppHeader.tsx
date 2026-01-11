@@ -1,8 +1,25 @@
-import { Layout, Menu, Space, Typography, theme } from 'antd';
+import { useMemo, useState } from 'react';
+import {
+  Button,
+  Col,
+  Drawer,
+  Grid,
+  Layout,
+  Menu,
+  Row,
+  Space,
+  Typography,
+  theme,
+} from 'antd';
+import type { MenuProps } from 'antd';
+import { MenuOutlined } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCurrentUser } from '@entities/user/model/useCurrentUser';
 import { ThemeToggle } from '@features/theme/toggle';
 import { LogoutButton } from '@features/logout';
+import { useUserRoles } from '@/lib/auth/useUserRoles';
+import { hasAnyRole } from '@/lib/auth/roles';
+import { Role } from '@/lib/auth/roles';
 
 const { Header } = Layout;
 
@@ -10,71 +27,129 @@ export function AppHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const { token } = theme.useToken();
+  const screens = Grid.useBreakpoint();
 
-  const { login, fullName, hasRole } = useCurrentUser();
-  const isSeniorAdmin = hasRole('senior_admin');
-  const selectedKey = location.pathname.split('/')[1] || 'purchases';
+  const isMobile = !screens.md;
 
-  const items = [
-    { key: 'purchases', label: 'Закупки' },
-    { key: 'reports', label: 'Отчеты' },
-    ...(isSeniorAdmin ? [{ key: 'admin', label: 'Админ панель' }] : []),
-  ];
+  const { login, fullName } = useCurrentUser();
+
+  const roles = useUserRoles();
+
+  const selectedKey = useMemo(
+    () => location.pathname.split('/')[1] || 'purchases',
+    [location.pathname]
+  );
+
+  const items = useMemo<MenuProps['items']>(() => {
+    const isSeniorAdmin = hasAnyRole(roles, [Role.SeniorAdmin]);
+
+    return [
+      { key: 'purchases', label: 'Закупки' },
+      { key: 'reports', label: 'Отчеты' },
+      ...(isSeniorAdmin ? [{ key: 'admin', label: 'Админ панель' }] : []),
+      ...(isSeniorAdmin
+        ? [{ key: 'deleted-purchases', label: 'Удаленные закупки' }]
+        : []),
+    ];
+  }, [roles]);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const onMenuClick: MenuProps['onClick'] = (e) => {
+    navigate(`/${e.key}`);
+    setDrawerOpen(false);
+  };
 
   return (
-    <Header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 16,
-        background: token.colorBgContainer,
-        borderBottom: `1px solid ${token.colorBorderSecondary}`,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <Typography.Text style={{ color: token.colorText, fontSize: 18 }}>
-          Учет закупок
-        </Typography.Text>
+    <>
+      <Header
+        style={{
+          background: token.colorBgContainer,
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+        }}
+      >
+        <Row align="middle" justify="space-between" wrap={false} gutter={16}>
+          <Col flex="none">
+            <Space align="center" size={12}>
+              {isMobile && (
+                <Button
+                  type="text"
+                  icon={<MenuOutlined />}
+                  onClick={() => setDrawerOpen(true)}
+                  aria-label="Открыть меню"
+                />
+              )}
 
+              <Typography.Text
+                style={{
+                  color: token.colorText,
+                  fontSize: 18,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Учет закупок
+              </Typography.Text>
+            </Space>
+          </Col>
+
+          <Col flex="auto">
+            {!isMobile && (
+              <Menu
+                mode="horizontal"
+                items={items}
+                selectedKeys={[selectedKey]}
+                onClick={onMenuClick}
+                style={{ background: 'transparent' }}
+              />
+            )}
+          </Col>
+
+          <Col flex="none">
+            <Space align="center" size={12}>
+              <ThemeToggle />
+
+              {!isMobile && (
+                <Space
+                  direction="vertical"
+                  size={0}
+                  style={{ lineHeight: 1.15, maxWidth: 260 }}
+                >
+                  {fullName && (
+                    <Typography.Text style={{ color: token.colorText }}>
+                      {fullName}
+                    </Typography.Text>
+                  )}
+
+                  <Typography.Text
+                    type="secondary"
+                    ellipsis={{ tooltip: login }}
+                    style={{ maxWidth: 260 }}
+                  >
+                    {login}
+                  </Typography.Text>
+                </Space>
+              )}
+
+              <LogoutButton />
+            </Space>
+          </Col>
+        </Row>
+      </Header>
+
+      <Drawer
+        title="Меню"
+        placement="left"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        bodyStyle={{ padding: 0 }}
+      >
         <Menu
-          mode="horizontal"
-          selectedKeys={[selectedKey]}
+          mode="inline"
           items={items}
-          onClick={(e) => navigate(`/${e.key}`)}
-          style={{ minWidth: 360, background: 'transparent' }}
+          selectedKeys={[selectedKey]}
+          onClick={onMenuClick}
         />
-      </div>
-
-      <Space align="center" size={12}>
-        <ThemeToggle />
-
-        {/* ФИО над логином + ellipsis для длинной почты */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            lineHeight: 1.15,
-            maxWidth: 260,
-          }}
-        >
-          {fullName && (
-            <Typography.Text style={{ color: token.colorText }}>
-              {fullName}
-            </Typography.Text>
-          )}
-
-          <Typography.Text
-            type="secondary"
-            ellipsis={{ tooltip: login }}
-            style={{ maxWidth: 260 }}
-          >
-            {login}
-          </Typography.Text>
-        </div>
-
-        <LogoutButton />
-      </Space>
-    </Header>
+      </Drawer>
+    </>
   );
 }

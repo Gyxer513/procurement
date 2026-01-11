@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsEnum } from 'class-validator';
-import { PurchaseStatus } from '../../domain/enums/purchase-status.enum';
+import { PurchaseStatus } from 'shared';
 
 export class SetStatusDto {
   @IsEnum(PurchaseStatus)

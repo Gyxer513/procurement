@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Patch,
-  Delete,
   Body,
   Param,
   Query,
@@ -20,14 +19,29 @@ import { SetStatusDto } from '../../application/dto/set-status.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles, RolesGuard } from '../../../auth/roles.guard';
 import { BatchResult } from '../../domain/entities/BatchResult.type';
-import { Role } from '../../../auth/roles';
+import { Role } from 'shared';
+import { SetDeletedDto } from '../../application/dto/set-deleted.dto';
+import { CurrentUser } from '../../../auth/current-user.decorator';
+
+import type { UserRef } from 'shared';
+
+export function keycloakUserToRef(user: any): UserRef {
+  return {
+    id: user.sub,
+    username: user.preferred_username ?? user.username,
+    email: user.email,
+    fullName:
+      user.name ??
+      ([user.given_name, user.family_name].filter(Boolean).join(' ') ||
+        undefined),
+  };
+}
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('purchases')
 export class PurchasesController {
   constructor(private readonly service: PurchasesService) {}
 
-  // Просмотр списка: всем ролям (инициатор потом будет фильтроваться "только своё")
   @Roles(
     Role.SeniorAdmin,
     Role.Admin,
@@ -39,7 +53,32 @@ export class PurchasesController {
   async list(@Query() query: ListPurchasesDto) {
     return this.service.list(query);
   }
+  // Batch: только senior_admin
+  @Roles(Role.SeniorAdmin)
+  @Post('batch')
+  @HttpCode(200)
+  async batch(
+    @Body()
+    body: {
+      items: Partial<Purchase>[];
+      mode?: 'insert' | 'upsert';
+      matchBy?: keyof Purchase;
+    }
+  ): Promise<BatchResult> {
+    if (!body || !Array.isArray(body.items) || body.items.length === 0) {
+      throw new BadRequestException('Body.items must be a non-empty array');
+    }
 
+    const mode = body.mode ?? 'upsert';
+    if (mode === 'insert') {
+      throw new BadRequestException('Insert mode is not supported yet');
+    }
+
+    return this.service.batchUpsert(body.items, {
+      matchBy: body.matchBy ?? 'entryNumber',
+      writeStatusHistoryOnInsert: true,
+    });
+  }
   // Экспорт: обычно только статист/закупки/админы
   @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement, Role.Statistic)
   @Get('export')
@@ -74,8 +113,12 @@ export class PurchasesController {
   // Создание: закупки/инициатор/админы
   @Roles(Role.SeniorAdmin, Role.Admin, Role.Procurement, Role.Initiator)
   @Post()
-  async create(@Body() dto: Partial<Purchase>): Promise<Purchase> {
-    return this.service.create(dto);
+  async create(
+    @Body() dto: Partial<Purchase>,
+    @CurrentUser() user: any
+  ): Promise<Purchase> {
+    const createdBy = keycloakUserToRef(user);
+    return this.service.create(dto, createdBy);
   }
 
   // Обновление: закупки/инициатор/админы (ограничение "инициатор только своё" позже)
@@ -107,36 +150,12 @@ export class PurchasesController {
 
   // Удаление: админы
   @Roles(Role.SeniorAdmin)
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.service.remove(id);
-    return { deleted: true };
-  }
-
-  // Batch: только senior_admin
-  @Roles(Role.SeniorAdmin)
-  @Post('batch')
+  @Patch(':id/deleted')
   @HttpCode(200)
-  async batch(
-    @Body()
-    body: {
-      items: Partial<Purchase>[];
-      mode?: 'insert' | 'upsert';
-      matchBy?: keyof Purchase;
-    }
-  ): Promise<BatchResult> {
-    if (!body || !Array.isArray(body.items) || body.items.length === 0) {
-      throw new BadRequestException('Body.items must be a non-empty array');
-    }
-
-    const mode = body.mode ?? 'upsert';
-    if (mode === 'insert') {
-      throw new BadRequestException('Insert mode is not supported yet');
-    }
-
-    return this.service.batchUpsert(body.items, {
-      matchBy: body.matchBy ?? 'entryNumber',
-      writeStatusHistoryOnInsert: true,
-    });
+  async setDeleted(
+    @Param('id') id: string,
+    @Body() dto: SetDeletedDto
+  ): Promise<Purchase> {
+    return this.service.setDeleted(id, dto.isDeleted);
   }
 }

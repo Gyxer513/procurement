@@ -10,5 +10,5 @@ type Props = {
 
 export function RoleGate({ anyOf, children, fallback = null }: Props) {
   const roles = useUserRoles();
-  return hasAnyRole(roles, anyOf) ? <>{children}</> : <>{fallback}</>;
+  return hasAnyRole(roles, anyOf) ? children : fallback;
 }

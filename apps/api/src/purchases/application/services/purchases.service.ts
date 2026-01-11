@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Purchase } from '../../domain/entities/purchase.entity';
-import { PurchaseStatus } from '../../domain';
+import { PurchaseStatus, type UserRef } from 'shared';
 import { IPurchaseRepository } from '../../domain/interfaces/purchase.repository.interface';
 import { ListPurchasesUseCase } from '../use-cases/list-purchases.use-case';
 import { GetPurchaseUseCase } from '../use-cases/get-purchase.use-case';
@@ -24,29 +24,36 @@ export class PurchasesService {
   ) {}
 
   list = (dto: any) => this.listUseCase.execute(dto);
-  listDeleted = (dto: any) => this.getUseCase.listDeleted(dto);
+
+  listDeleted = (dto: any) =>
+    this.listUseCase.execute({ ...dto, isDeleted: true });
+
   findOne = (id: string) => this.getUseCase.execute(id);
-  create = (dto: Partial<Purchase>) => this.createUseCase.execute(dto);
-  update = (id: string, dto: Partial<Purchase>) =>
-    this.updateUseCase.execute(id, dto);
+
+  // ✅ createdBy берём ТОЛЬКО с бэка (из токена)
+  create = (dto: Partial<Purchase>, createdBy: UserRef) =>
+    this.createUseCase.execute({ ...dto, createdBy });
+
+  // ✅ запрещаем менять createdBy через update
+  update = (id: string, dto: Partial<Purchase>) => {
+    const { createdBy, ...safeDto } = dto as any;
+    return this.updateUseCase.execute(id, safeDto);
+  };
+
   setStatus = (id: string, status: PurchaseStatus, comment?: string) =>
     this.changeStatusUseCase.execute(id, status, comment);
 
-  // вместо физического удаления — ставим статус Deleted
   remove = async (id: string) => {
-    // если уже Deleted — можно либо вернуть ok, либо кинуть ошибку
-    const purchase = await this.getUseCase.execute(id);
-    if (purchase.status === PurchaseStatus.Deleted) {
-      return { deleted: true };
-    }
-
-    await this.changeStatusUseCase.execute(
-      id,
-      PurchaseStatus.Deleted,
-      'Удалено'
-    );
-
+    await this.purchaseRepository.setDeleted(id, true);
     return { deleted: true };
+  };
+
+  setDeleted = (id: string, isDeleted: boolean) =>
+    this.purchaseRepository.setDeleted(id, isDeleted);
+
+  restore = async (id: string) => {
+    await this.purchaseRepository.setDeleted(id, false);
+    return { restored: true };
   };
 
   export = (dto: any) => this.exportUseCase.execute(dto);

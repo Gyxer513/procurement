@@ -5,5 +5,4 @@ export enum PurchaseStatus {
   Rework = 'на доработку',
   Rejected = 'отказано',
   Canceled = 'аннулировано',
-  Deleted = 'Deleted',
 }

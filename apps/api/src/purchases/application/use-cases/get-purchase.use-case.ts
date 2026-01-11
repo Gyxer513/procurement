@@ -1,7 +1,5 @@
-// GetPurchaseUseCase.ts
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { IPurchaseRepository } from '../../domain/interfaces/purchase.repository.interface';
-import { PurchaseStatus } from '../../domain';
 import { ListPurchasesDto } from '../dto/list-purchases.dto';
 
 @Injectable()
@@ -18,7 +16,6 @@ export class GetPurchaseUseCase {
   }
 
   async listDeleted(dto: ListPurchasesDto) {
-    // берём ту же логику пагинации/сортировки, но статус фиксируем
     const page = Math.max(1, Number(dto.page ?? 1));
     const pageSize = Math.max(1, Math.min(200, Number(dto.pageSize ?? 20)));
     const skip = (page - 1) * pageSize;
@@ -27,7 +24,7 @@ export class GetPurchaseUseCase {
     const sortOrder = dto.sortOrder === 'asc' ? 1 : -1;
     const sort = { [sortBy]: sortOrder } as Record<string, 1 | -1>;
 
-    const filter: any = { status: PurchaseStatus.Deleted };
+    const filter: any = { isDeleted: true };
 
     const [items, total] = await Promise.all([
       this.purchaseRepo.findAll(filter, { skip, limit: pageSize, sort }),
